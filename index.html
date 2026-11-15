@@ -85,6 +85,7 @@ label.chk input[type="text"] { width: 110px; font-family: var(--mono); font-size
 .ayuda b { color: var(--ink); font-weight: 600; }
 .deriv { font-size: 13.5px; background: var(--hl-bg); border-left: 3px solid var(--hl-bd); border-radius: 4px; padding: 8px 12px; max-width: 110ch; }
 .deriv b { font-weight: 700; }
+.deriv:empty { display: none; }
 .item .ayuda-item { font-size: 12.5px; color: var(--ink2); background: var(--bg); border-radius: 4px; padding: 7px 10px; min-height: 2.6em; }
 .item .ayuda-item b { color: var(--ink); font-weight: 600; }
 label.c.sinuso { opacity: 0.5; }
@@ -427,6 +428,7 @@ td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
               <option value="dep">Solo la capacidad de depósito</option>
               <option value="ambos" selected>Presupuesto y capacidad de depósito</option>
             </select>
+            <p class="deriv" id="c-lim-estado" style="margin:0"></p>
             <p class="ayuda"><b>Qué es:</b> los topes que la compra no puede pasar. Con «Ninguno» se calcula el plan más barato sin ningún tope.<br><b>Para comparar:</b> calculá con los límites y mirá en el recuadro azul cuánto costaría sin ellos; o elegí «Ninguno» y volvé a calcular.</p></div>
           <div class="campo"><label for="c-minsel">Compra mínima del proveedor</label>
             <select id="c-minsel">
@@ -2399,7 +2401,7 @@ function cargarEjemplo() {
   $("c-fin").value = "30"; $("c-inf").value = "18"; $("c-alm").value = "8"; $("c-ss").value = "eco"; $("c-niv").value = "95"; $("c-interp").value = "tramos";
   $("c-pre").checked = true; $("c-pre-v").value = "60000";
   $("c-dep").checked = true; $("c-dep-v").value = "60";
-  $("c-min").checked = false; $("c-min-v").value = "20000";
+  $("c-min").checked = false; $("c-min-v").value = "20000"; $("c-min-v").dataset.antes = "20000";
   menuDesdeLimites();
   $("c-ped").value = "sep"; $("c-s0").value = "2000"; $("c-desc").value = "item"; $("c-tm").value = "0: 0; 30000: 2; 60000: 4; 120000: 6"; $("c-lleg").value = "juntas";
   actualizarAyudas();
@@ -2437,7 +2439,8 @@ function leerCompras() {
   const plazoPago = 0, dtoContado = 0;            // la condición de pago llega de la solapa Condiciones de pago (cfg.pagoGen)
   const ssModo = $("c-ss").value;
   const nivel = ssModo === "fijo" ? gral("c-niv", "El nivel de servicio", x => x >= 50 && x < 100, "tiene que estar entre 50 y 99,99") / 100 : 0.95;
-  const lim = (chk, val, et) => { if (!$(chk).checked) return null; const x = numeroEs($(val).value); if (!(x > 0)) throw new Error(`${et} tiene que ser un número mayor que cero, o elegí no aplicarlo en el paso 5.`); return x; };
+  const lv = $("c-lim").value, menu = { "c-pre": lv === "pre" || lv === "ambos", "c-dep": lv === "dep" || lv === "ambos", "c-min": $("c-minsel").value === "si" };
+  const lim = (chk, val, et) => { if (!menu[chk]) return null; const x = numeroEs($(val).value); if (!(x > 0)) throw new Error(`${et} tiene que ser un número mayor que cero, o elegí no aplicarlo en el paso 5.`); return x; };
   const S0 = numeroEs($("c-s0").value);
   if (!(S0 >= 0)) throw new Error("El costo fijo del pedido conjunto tiene que ser un número, cero o más.");
   let tablaMonto;
@@ -2544,7 +2547,7 @@ function ejecutarTodo() {
 }
 
 /* ---------- guardar y recuperar los datos cargados ---------- */
-const CAMPOS = ["p-dev", "p-imp", "c-fin", "c-inf", "c-alm", "c-cond", "c-ped", "c-s0", "c-desc", "c-tm", "c-interp", "c-ss", "c-niv", "c-lleg", "c-pre-v", "c-dep-v", "c-min-v"], CHECKS = ["c-pre", "c-dep", "c-min", "g-auto"];
+const CAMPOS = ["p-dev", "p-imp", "c-fin", "c-inf", "c-alm", "c-cond", "c-ped", "c-s0", "c-desc", "c-tm", "c-interp", "c-ss", "c-niv", "c-lleg", "c-pre-v", "c-dep-v", "c-min-v", "c-lim", "c-minsel"], CHECKS = ["c-pre", "c-dep", "c-min", "g-auto"];
 function serializarForm() {
   const o = { v: {}, c: {}, items: [], busq: modo === "compras" ? [$("np").value, $("ngen").value, $("seed").value] : cfgPor.compras };
   CAMPOS.forEach(id => { o.v[id] = $(id).value; }); CHECKS.forEach(id => { o.c[id] = $(id).checked; });
@@ -2559,7 +2562,7 @@ function aplicarForm(o) {
   numerarItems();
   if (Array.isArray(o.ofertas) && o.ofertas.length) { $("ofertas").innerHTML = ""; o.ofertas.slice(0, MAXO).forEach(filaOferta); numerarOfertas(); }
   refrescarCondOpts(o.v && o.v["c-cond"] !== undefined ? o.v["c-cond"] : "mejor");
-  menuDesdeLimites();
+  if (o.v && o.v["c-lim"]) limitesDesdeMenu(); else menuDesdeLimites();
   if (cacheC) { cambios = true; pintarSellos(); }
   if (cacheP) { cambiosP = true; pintarSelloP(); }
   actualizarBaseP(); actualizarAyudas();
@@ -2622,9 +2625,13 @@ function textoLimite(l) {
 }
 /* ---------- límites: el menú del paso 5 maneja las casillas internas ---------- */
 function mostrarLimites() {
-  $("w-pre").classList.toggle("oculto", !$("c-pre").checked);
-  $("w-dep").classList.toggle("oculto", !$("c-dep").checked);
-  $("w-min").classList.toggle("oculto", !$("c-min").checked);
+  [["c-pre", "w-pre", "c-pre-v"], ["c-dep", "w-dep", "c-dep-v"], ["c-min", "w-min", "c-min-v"]].forEach(([chk, w, val]) => {
+    const on = $(chk).checked, el = $(val);
+    $(w).classList.toggle("oculto", !on);
+    if (!on && el.value !== "") { el.dataset.antes = el.value; el.value = ""; }           // apagado: la casilla queda vacía
+    else if (on && el.value === "" && el.dataset.antes) el.value = el.dataset.antes;     // al volver a prenderlo, recupera el último valor
+  });
+  $("c-lim-estado").textContent = !$("c-pre").checked && !$("c-dep").checked && !$("c-min").checked ? "Se calcula sin ninguna restricción." : "";
 }
 function limitesDesdeMenu() {
   const v = $("c-lim").value;
