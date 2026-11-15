@@ -110,6 +110,19 @@ label.c.sinuso { opacity: 0.5; }
 .occ .d { font-size: 12px; color: var(--ink2); }
 .occ .d b { color: var(--ink); font-weight: 600; }
 .occ .d.malo b { color: var(--bad); }
+.oculto-v { display: none !important; }
+.guia { margin: 0; padding: 10px 14px 10px 34px; background: var(--hl-bg); border-left: 3px solid var(--hl-bd); border-radius: 4px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; max-width: 110ch; }
+.sello { font-size: 12.5px; color: var(--ink2); font-family: var(--mono); }
+.sello.malo { color: var(--bad); font-weight: 600; }
+.viejo { color: var(--bad); font-weight: 700; font-size: 14px; }
+.concl h3.cs { margin: 6px 0 0; font-size: 14px; font-weight: 700; }
+.concl .cl, .card .cl { font-size: 15px; max-width: 100ch; }
+.concl table.oc { font-size: 14px; background: var(--surface); border-radius: 6px; }
+.concl table.oc th, .concl table.oc td { padding: 7px 10px; }
+.concl table.oc td b { font-size: 15.5px; }
+.concl details summary { color: var(--ink); font-weight: 600; font-size: 14px; }
+.concl details ul { margin-top: 8px; }
+.line { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
 .cview { display: flex; flex-direction: column; gap: 16px; }
 .concl { background: var(--hl-bg); border: 2px solid var(--hl-bd); border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
 .concl .eti { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink2); }
@@ -247,6 +260,12 @@ td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
       <div class="seg" id="fnseg" role="group" aria-label="Función objetivo"></div>
     </div>
     <div class="row cform oculto" id="cform">
+      <ol class="guia">
+        <li><b>Cargá los datos</b> en los pasos 1 a 5. Con «Guardar datos» quedan para la próxima vez.</li>
+        <li><b>Tocá «Optimizar la compra»</b> en el paso 6. Nada se calcula ni se mueve hasta que lo tocás.</li>
+        <li><b>Leé el recuadro azul «Resultado»:</b> qué comprar, cuánto cuesta y por qué. Lo que sigue debajo es el detalle.</li>
+        <li><b>Para comparar con comprar a frecuencia fija</b> (mensual, bimestral, trimestral, semestral o anual), pasá a la solapa «Frecuencia de compra».</li>
+      </ol>
       <section class="paso">
         <h3><span class="np">Paso 1</span> Condiciones financieras</h3>
         <p class="intro">Definen cuánto cuesta tener plata puesta en stock. Son de la empresa, no del proveedor.</p>
@@ -257,8 +276,6 @@ td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
             <p class="ayuda"><b>Qué es:</b> cuánto se espera que suban los precios del proveedor en el año.<br><b>Impacto:</b> la mercadería guardada se revaloriza, y eso compensa el costo financiero. Con inflación alta conviene pedir más por vez; si supera a la tasa financiera, conviene adelantar compras.</p></div>
           <div class="campo"><label for="c-alm">Almacenamiento anual (%)</label><input type="text" id="c-alm" value="8" inputmode="decimal">
             <p class="ayuda"><b>Qué es:</b> el costo físico de guardar la mercadería durante un año, como porcentaje de su valor: espacio, seguros, manipuleo, mermas, vencimientos y obsolescencia.<br><b>Impacto:</b> se suma a la tasa real. No se compensa con inflación.</p></div>
-          <div class="campo"><label for="c-pp">Plazo de pago al proveedor (días)</label><input type="text" id="c-pp" value="30" inputmode="decimal">
-            <p class="ayuda"><b>Qué es:</b> los días entre que se recibe la mercadería y se paga la factura. Cero si es contado.<br><b>Impacto:</b> pagar más tarde equivale a un descuento. Baja el costo total; sobre la cantidad a pedir influye poco. Sirve para comparar condiciones entre proveedores.</p></div>
         </div>
         <p class="deriv" id="c-deriv"></p>
       </section>
@@ -284,6 +301,16 @@ td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
             <p class="ayuda" id="ay-desc"></p></div>
           <div class="campo" id="w-tm"><label for="c-tm">Escala de descuento por monto (monto: %)</label><input type="text" id="c-tm" value="0: 0; 30000: 2; 60000: 4; 120000: 6" autocomplete="off">
             <p class="ayuda"><b>Qué es:</b> el descuento que da el proveedor según el monto del pedido. Se escribe monto: porcentaje, separando los tramos con punto y coma. «30000: 2» significa 2 % en pedidos de $ 30.000 o más.<br><b>Impacto:</b> premia los pedidos grandes. Pesa más con pedidos juntos, porque el monto conjunto llega a tramos que un ítem solo no alcanza.</p></div>
+          <div class="campo"><label for="c-pago">Condición de pago que se usa hoy</label>
+            <select id="c-pago">
+              <option value="plazo" selected>A plazo, sin descuento</option>
+              <option value="contado">Contado, con descuento</option>
+            </select>
+            <p class="ayuda" id="ay-pago"></p></div>
+          <div class="campo"><label for="c-pp">Plazo de pago (días)</label><input type="text" id="c-pp" value="30" inputmode="decimal">
+            <p class="ayuda"><b>Qué es:</b> los días entre que se recibe la mercadería y se paga la factura cuando se compra a plazo.<br><b>Impacto:</b> pagar más tarde equivale a un descuento. Se usa siempre: para calcular el plan si se paga a plazo, y para comparar contra el pago contado.</p></div>
+          <div class="campo"><label for="c-dc">Descuento por pago contado (%)</label><input type="text" id="c-dc" value="3" inputmode="decimal">
+            <p class="ayuda"><b>Qué es:</b> el porcentaje que el proveedor descuenta de la factura si se paga al recibir la mercadería. Cargá el ofrecido, o cero si no ofrece ninguno.<br><b>Impacto:</b> se compara contra pagar a plazo, y el resultado dice cuál es el descuento mínimo que conviene aceptar.</p></div>
           <div class="campo"><label for="c-interp">Cómo se leen las tablas de precios</label>
             <select id="c-interp">
               <option value="tramos" selected>Por tramos: el precio vale desde esa cantidad</option>
@@ -337,12 +364,23 @@ td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
         </div>
       </section>
 
-      <div class="line">
-        <button class="btn" type="submit" id="c-run">Optimizar la compra</button>
-        <button class="btn ghost" type="button" id="c-ej">Volver al ejemplo</button>
-      </div>
-      <p class="err" id="cerr" role="alert"></p>
-      <p class="hint"><b>Todo se actualiza solo:</b> al cambiar cualquier dato se recalculan la conclusión, el plan, la comparación, los gráficos y la solapa «Frecuencia de compra». El botón «Optimizar la compra» vuelve a mostrar la búsqueda generación por generación. Los decimales se pueden escribir con coma. Los datos precargados son un ejemplo ficticio: las tasas no son referencias de mercado, hay que cargar las de la empresa.</p>
+      <section class="paso" style="border-bottom:0">
+        <h3><span class="np">Paso 6</span> Calcular y guardar</h3>
+        <div class="line">
+          <button class="btn" type="submit" id="c-run">Optimizar la compra</button>
+          <span class="sello" id="c-calc">Todavía no se calculó.</span>
+        </div>
+        <div class="line">
+          <button class="btn ghost" type="button" id="c-save">Guardar datos</button>
+          <span class="sello" id="c-saved">Todavía no se guardó.</span>
+        </div>
+        <div class="line">
+          <label class="chk" for="auto"><input type="checkbox" id="auto"> Recalcular solo cada vez que cambio un dato</label>
+          <button class="btn ghost" type="button" id="c-ej">Volver al ejemplo</button>
+        </div>
+        <p class="err" id="cerr" role="alert"></p>
+        <p class="hint">Mientras cargás datos no se recalcula nada, así la pantalla no se mueve. Si cambiás un dato después de calcular, el sello avisa que hay cambios sin calcular. Si preferís que se recalcule solo, tildá la casilla. Los decimales se pueden escribir con coma. Los datos precargados son un ejemplo ficticio: las tasas no son referencias de mercado.</p>
+      </section>
     </div>
     <div class="row propia" id="propia" hidden>
       <div class="line">
@@ -367,8 +405,8 @@ td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
       <p class="hint" id="hint">Variables x e y. Operadores + − * / ^ y paréntesis. Funciones: sin, cos, tan, exp, log (natural), log10, sqrt, abs, min, max, floor, sign, tanh, atan. Constantes pi y e. Los decimales van con punto: 0.5. Se busca el mínimo; para maximizar g, escribí −(g).</p>
       <p class="hint solo-r" id="hint-r" hidden>Cada restricción es una comparación entre dos expresiones, por ejemplo x + 2y &lt;= 4, x*y &gt;= 1 o y = x^2. Hasta 12. Una igualdad se considera cumplida con una tolerancia de 0,0001.</p>
     </div>
-    <div class="row">
-      <button class="btn" id="play" type="button">Pausar</button>
+    <div class="row" id="playrow">
+      <button class="btn" id="play" type="button">Reproducir</button>
       <button class="btn ghost" id="reset" type="button">Reiniciar</button>
       <div class="slider">
         <input type="range" id="gen" min="0" max="100" step="1" value="0" aria-label="Generación">
@@ -392,12 +430,25 @@ td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
     <p class="hint oculto" id="busq-ayuda"><b>Individuos, generaciones y semilla</b> son parámetros de la búsqueda, no del negocio: cuántos planes prueba cada método por vuelta, cuántas vueltas da y con qué números al azar arranca. Más individuos y generaciones dan más chances de encontrar el mejor plan. Para saber si el resultado es firme, tocá «Probar otra semilla» dos o tres veces: si el plan no cambia, es una buena señal.</p>
   </form>
 
+  <section class="card oculto" id="c-vacio">
+    <h2>Todavía no hay resultados</h2>
+    <p class="como">Revisá o cargá los datos de los pasos 1 a 5 y tocá <b>«Optimizar la compra»</b>. El resultado va a aparecer acá abajo, en un recuadro azul.</p>
+  </section>
+
   <p class="desc" id="desc"></p>
 
   <section class="concl oculto" id="concl" aria-live="polite">
-    <span class="eti">Conclusión</span>
+    <span class="eti">Resultado</span>
+    <p class="viejo oculto" id="concl-viejo">Atención: cambiaste datos después de este cálculo. Tocá «Optimizar la compra» para actualizarlo.</p>
     <div class="titular" id="concl-t"></div>
+    <h3 class="cs" id="oc-h">1. Qué comprar</h3>
+    <div class="tw" id="oc-w" style="margin-top:0"><table class="oc" id="oc"></table></div>
+    <p class="cl" id="concl-cost"></p>
+    <h3 class="cs" id="pq-h">2. Por qué es el mejor plan</h3>
     <ul id="concl-l"></ul>
+    <h3 class="cs">3. Qué se puede negociar para bajar el costo</h3>
+    <ul id="concl-n"></ul>
+    <details id="concl-mas"><summary>Más detalle: stock de seguridad, pago y tasas</summary><ul id="concl-m"></ul></details>
     <p class="pie" id="concl-p"></p>
   </section>
 
@@ -413,6 +464,12 @@ td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
   <div class="panels" id="panels"></div>
 
   <div class="cview oculto" id="cview">
+    <section class="card" id="pagocard">
+      <h2>Pago contado o a plazo</h2>
+      <p class="como"><b>Cómo leerla:</b> cada columna es una condición de pago, con su mejor forma de comprar. Pagando contado la factura baja por el descuento, pero la plata sale antes; pagando a plazo no hay descuento, pero la plata se usa durante esos días. El texto de abajo dice cuál conviene y cuál es el descuento mínimo que vale la pena aceptar.</p>
+      <div class="tw" style="margin-top:0"><table class="mx" id="pago"></table></div>
+      <p class="cl" id="pago-txt"></p>
+    </section>
     <section class="card">
       <h2 id="plan-title">Plan de compra</h2>
       <p class="plan-estado" id="plan-estado"></p>
@@ -442,10 +499,29 @@ td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
   </div>
 
   <div class="cview oculto" id="fview">
+    <section class="card oculto" id="f-vacio">
+      <h2>Todavía no hay nada que comparar</h2>
+      <p class="como">Esta solapa compara comprar a frecuencia fija contra el plan optimizado, con los datos de la solapa «Compras». Todavía no se calculó nada.</p>
+      <div class="line"><button class="btn" type="button" id="f-calc">Calcular la comparación</button><button class="btn ghost" type="button" id="f-ir2">Ir a cargar los datos en Compras</button></div>
+      <p class="err" id="f-err" role="alert"></p>
+    </section>
+    <div class="cview" id="f-cuerpo">
     <p class="desc" id="f-param"></p>
+    <div class="line">
+      <button class="btn" type="button" id="f-recalc">Volver a calcular</button>
+      <span class="sello" id="f-calcsello"></span>
+      <button class="btn ghost" type="button" id="f-save">Guardar datos</button>
+      <span class="sello" id="f-saved">Todavía no se guardó.</span>
+    </div>
+    <p class="err" id="f-err2" role="alert"></p>
     <section class="concl">
-      <span class="eti">Conclusión</span>
+      <span class="eti">Resultado</span>
+      <p class="viejo oculto" id="f-viejo">Atención: cambiaste datos en la solapa Compras después de este cálculo. Tocá «Volver a calcular».</p>
       <div class="titular" id="f-t"></div>
+      <h3 class="cs" id="f-oc-h">1. Qué comprar</h3>
+      <div class="tw" id="f-oc-w" style="margin-top:0"><table class="oc" id="f-oc"></table></div>
+      <p class="cl" id="f-cost"></p>
+      <h3 class="cs">2. Por qué</h3>
       <ul id="f-l"></ul>
       <p class="pie" id="f-p"></p>
     </section>
@@ -470,6 +546,7 @@ td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
       <div class="tw" style="margin-top:0"><table class="mx" id="mx3"></table></div>
     </section>
     <div><button class="btn ghost" type="button" id="f-ir">Cambiar los datos en la solapa Compras</button></div>
+    </div>
   </div>
 
   <div class="key" id="key">
@@ -1180,6 +1257,8 @@ function modeloCompras(cfg) {
   });
   const n = items.length, interp = cfg.interp;
   const fp = Math.pow(1 + cfg.iFin, -cfg.plazoPago / 365), r = (1 + cfg.iFin) / (1 + cfg.infl) - 1, h = r + cfg.alm;
+  // condición de pago: a plazo sin descuento, o contado (se paga al recibir) con un descuento sobre la factura
+  const contado = cfg.pago === "contado", kc = contado ? 1 - (cfg.dtoContado || 0) : 1, fpEf = contado ? 1 : fp;
   const conj = cfg.pedido === "jun", usaItem = cfg.desc !== "monto", usaMonto = cfg.desc !== "item";
   const pItem = (it, q) => usaItem ? precioDe(it.tabla, q, interp) : it.tabla[0].p;
   const dtoDe = monto => usaMonto ? precioDe(cfg.tablaMonto, monto, interp) / 100 : 0;
@@ -1197,11 +1276,11 @@ function modeloCompras(cfg) {
   };
   // costo anual de un ítem que se pide de a q unidades, N veces por año, con descuento por monto dto
   const fila = (it, q, N, p0, dto, pedidos) => {
-    const pf = p0 * (1 - dto), pe = pf * fp;               // precio de factura y costo efectivo (valor presente)
+    const lista = p0 * (1 - dto), pf = lista * kc, pe = pf * fpEf;   // precio antes del descuento por contado, de factura, y costo efectivo (valor presente)
     const z = zDe(it, pe, N), ss = z * it.sigmaL;
     const compra = it.D * pf, plazo = it.D * (pf - pe);
     const mant = h * pe * (q / 2 + ss), falt = N * it.falt * it.sigmaL * perdidaNormal(z);
-    return { q, p0, pf, pe, dto, z, ss, nivel: FiNormal(z), reorden: it.D * it.LT / 365 + ss, N, compra, plazo, pedidos, mant, falt,
+    return { q, p0, lista, pf, pe, dto, ahorroContado: it.D * (lista - pf), z, ss, nivel: FiNormal(z), reorden: it.D * it.LT / 365 + ss, N, compra, plazo, pedidos, mant, falt,
       total: compra - plazo + pedidos + mant + falt, gasto: pf * q, vol: it.vol * (q + ss) };
   };
   /* OCUPACIÓN DEL DEPÓSITO A LO LARGO DEL TIEMPO
@@ -1246,7 +1325,7 @@ function modeloCompras(cfg) {
     }
     const suma = k => filas.reduce((a, f) => a + f[k], 0);
     const compra = suma("compra"), plazo = suma("plazo"), mant = suma("mant"), falt = suma("falt");
-    return { filas, total: compra - plazo + pedidos + mant + falt, compra, plazo, pedidos, mant, falt, gasto: suma("gasto"),
+    return { filas, ahorroContado: suma("ahorroContado"), total: compra - plazo + pedidos + mant + falt, compra, plazo, pedidos, mant, falt, gasto: suma("gasto"),
       vol: picoDeposito(filas),                                                        // pico de ocupación, según cómo llegan los pedidos
       volJuntas: suma("vol"),                                                          // pico si todo llegara el mismo día
       volProm: filas.reduce((a, f, k) => a + items[k].vol * (f.q / 2 + f.ss), 0),      // ocupación promedio del año
@@ -1269,8 +1348,9 @@ function modeloCompras(cfg) {
   }
   const ev = x => { const dt = detalle(plan(x)); return [dt.total, violDe(dt)]; };
   // referencia exacta sin restricciones conjuntas (y, con pedidos juntos, también con ellas)
-  let libre, barrido = null;
-  if (!conj) libre = items.map(it => {
+  let libre = null, barrido = null;
+  if (cfg._ligero) { /* modelo auxiliar para comparar condiciones: no necesita las referencias */ }
+  else if (!conj) libre = items.map(it => {
     const m = Math.round((it.maxR - it.minR) / it.mult), paso = Math.max(1, Math.ceil(m / 2e6));
     let mq = it.minR, mc = Infinity;
     for (let k = 0; k <= m; k += paso) { const q = it.minR + k * it.mult, c = costoItem(it, q).total; if (c < mc) { mc = c; mq = q; } }
@@ -1286,7 +1366,7 @@ function modeloCompras(cfg) {
   }
   // cantidades que resultan de comprar cada ítem N veces por año, respetando lotes y múltiplos
   const porFrecuencia = N => items.map(it => redondear(it, it.D / N));
-  return { d: lb.length, n, items, lb, ub, plan, detalle, violDe, ev, costoItem, libre, barrido, conj, usaItem, usaMonto, fp, r, h, cfg, porFrecuencia, perfilDeposito, escalona };
+  return { d: lb.length, n, items, lb, ub, plan, detalle, violDe, ev, costoItem, libre, barrido, conj, usaItem, usaMonto, fp, fpEf, kc, contado, r, h, cfg, porFrecuencia, perfilDeposito, escalona };
 }
 
 /* =====================================================================
@@ -1518,7 +1598,44 @@ function correrTodosN(pr, np, gen, semilla) {
   };
 }
 
-if (typeof module !== "undefined") module.exports = { parsePrecios, parseDescuentos, precioDe, modeloCompras, correrTodosN, numeroEs, FiNormal, invFiNormal, perdidaNormal };
+/* =====================================================================
+   PAGO CONTADO CONTRA PAGO A PLAZO
+   ===================================================================== */
+const FRECUENCIAS = [12, 6, 4, 2, 1];
+// mejor plan factible que encuentra la Evolución Diferencial con nivel ε (el más confiable de los cuatro métodos)
+function optimoRapido(m, np, gen, semilla) {
+  const R = runDEepsN(m, poblacionN(crearRng(semilla), m.lb, m.ub, np), gen, semilla);
+  if (R.viol[gen] !== 0) return null;
+  const q = m.plan(R.pts[gen]);
+  return { q, total: R.mejor[gen] };
+}
+// la más barata entre el plan optimizado y las cinco frecuencias fijas que cumplan los límites
+function mejorOpcion(m, opt) {
+  let mejor = opt ? { ...opt, forma: "opt" } : null;
+  FRECUENCIAS.forEach(n => { const q = m.porFrecuencia(n), dt = m.detalle(q);
+    if (m.violDe(dt) === 0 && (!mejor || dt.total < mejor.total - 1e-9)) mejor = { q, total: dt.total, forma: n }; });
+  return mejor;
+}
+// descuento por contado con el que la mejor opción pagando contado iguala un costo objetivo
+function descuentoQueEmpata(cfg, objetivo, np, gen, semilla) {
+  const costo = d => { const m = modeloCompras({ ...cfg, pago: "contado", dtoContado: d, _ligero: true }); const o = mejorOpcion(m, optimoRapido(m, np, gen, semilla)); return o ? o.total : Infinity; };
+  if (costo(0) <= objetivo) return 0;
+  let a = 0, b = 0.5;
+  if (costo(b) > objetivo) return null;                 // ni con 50 % alcanza
+  for (let k = 0; k < 12; k++) { const m = (a + b) / 2; if (costo(m) > objetivo) a = m; else b = m; }
+  return b;
+}
+// lo mismo, pero con las cantidades fijas (sin volver a optimizar)
+function descuentoQueEmpataFijo(cfg, q, objetivo) {
+  const costo = d => modeloCompras({ ...cfg, pago: "contado", dtoContado: d, _ligero: true }).detalle(q).total;
+  if (costo(0) <= objetivo) return 0;
+  let a = 0, b = 0.5;
+  if (costo(b) > objetivo) return null;
+  for (let k = 0; k < 20; k++) { const m = (a + b) / 2; if (costo(m) > objetivo) a = m; else b = m; }
+  return b;
+}
+
+if (typeof module !== "undefined") module.exports = { parsePrecios, parseDescuentos, precioDe, modeloCompras, correrTodosN, numeroEs, FiNormal, invFiNormal, perdidaNormal, optimoRapido, mejorOpcion, descuentoQueEmpata, descuentoQueEmpataFijo };
 
 /* =====================================================================
    FLUJO DE FONDOS DEL AÑO, INDEXADO POR INFLACIÓN
@@ -1529,12 +1646,12 @@ if (typeof module !== "undefined") module.exports = { parsePrecios, parseDescuen
    anual del modelo con un cálculo independiente.
    ===================================================================== */
 function flujoAnual(pr, q) {
-  const cfg = pr.cfg, dt = pr.detalle(q), i = cfg.iFin, f = cfg.infl, L = cfg.plazoPago / 365, r = pr.r;
+  const cfg = pr.cfg, dt = pr.detalle(q), i = cfg.iFin, f = cfg.infl, L = pr.contado ? 0 : cfg.plazoPago / 365, r = pr.r;
   const meses = new Array(12).fill(0);          // pagos al proveedor por mes de emisión, en pesos corrientes
   let nominal = 0, sinInfl = 0, vp = 0, pedidosNom = 0, compras = 0, sobranteNom = 0;
   const comprar = (t, monto) => { const m = monto * Math.pow(1 + f, t); nominal += m; sinInfl += monto; meses[Math.min(11, Math.floor(12 * t + 1e-9))] += m; vp += m / Math.pow(1 + i, t + L); };
   const pedir = (t, costo) => { const m = costo * Math.pow(1 + f, t); pedidosNom += m; vp += m / Math.pow(1 + i, t); };
-  const cierre = (unidades, pf) => { const m = unidades * pf * (1 + f); sobranteNom += m; vp -= m * pr.fp / (1 + i); };   // stock que queda al cierre, a valor de reposición
+  const cierre = (unidades, pf) => { const m = unidades * pf * (1 + f); sobranteNom += m; vp -= m * pr.fpEf / (1 + i); };   // stock que queda al cierre, a valor de reposición
   if (!pr.conj) pr.items.forEach((it, k) => {
     const fl = dt.filas[k], T = fl.q / it.D, K = Math.ceil(1 / T - 1e-9);
     for (let j = 0; j < K; j++) { comprar(j * T, fl.q * fl.pf); pedir(j * T, it.S); compras++; }
@@ -1764,6 +1881,12 @@ function actualizarAyudas() {
     ? "<b>Por ítem:</b> vale la tabla de precios de cada ítem, que se carga en el Paso 3. Premia concentrar cantidad en cada producto."
     : desc === "monto" ? "<b>Por monto:</b> cada ítem se paga a su primer precio de tabla (precio de lista) y el proveedor descuenta un porcentaje según el monto del pedido. Premia armar pedidos grandes, sin importar el mix. Hay que cargar la escala de descuento."
     : "<b>Ambos:</b> se aplica la tabla de precios de cada ítem y, encima, el descuento por monto del pedido. Hay que cargar la escala de descuento.";
+  { const i0 = numeroEs($("c-fin").value) / 100, L0 = numeroEs($("c-pp").value), dc0 = numeroEs($("c-dc").value);
+    const eq = Number.isFinite(i0) && Number.isFinite(L0) && i0 >= 0 && L0 >= 0 ? (100 * (1 - Math.pow(1 + i0, -L0 / 365))).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " %" : null;
+    $("ay-pago").innerHTML = ($("c-pago").value === "contado"
+      ? "<b>Contado:</b> se paga al recibir la mercadería y el proveedor descuenta el porcentaje cargado. El plan se calcula con esa condición."
+      : "<b>A plazo:</b> se paga la factura completa, sin descuento, cuando vence el plazo. El plan se calcula con esa condición.") +
+      (eq ? ` <b>Referencia:</b> con la tasa financiera cargada, pagar a ${miles(L0)} días equivale a un descuento de ${eq}. Un descuento por contado ${Number.isFinite(dc0) ? (dc0 > parseFloat(eq.replace(",", ".")) ? "como el cargado, mayor que eso, conviene" : "como el cargado, menor que eso, no conviene") : "menor que eso no conviene"}. La otra condición también se calcula, para comparar.` : ""); }
   $("w-lleg").classList.toggle("oculto", jun || !$("c-dep").checked);
   $("ay-lleg").innerHTML = $("c-lleg").value === "escalonadas"
     ? "<b>Escalonados:</b> las entregas de los distintos ítems se reparten dentro del ciclo. Cuando entra uno, los demás ya están parcialmente consumidos, así que el pico de ocupación es menor. Exige coordinar las fechas de entrega con el proveedor."
@@ -1778,7 +1901,7 @@ function actualizarAyudas() {
   if ([i, f, a, L].every(Number.isFinite) && i >= 0 && f > -1 && a >= 0 && L >= 0) {
     const r = (1 + i) / (1 + f) - 1, fp = Math.pow(1 + i, -L / 365);
     $("c-deriv").innerHTML = `<b>Con estos valores:</b> tasa real = (1 + ${p1(i)}) ÷ (1 + ${p1(f)}) − 1 = <b>${p1(r)}</b>. Tasa de mantenimiento del stock = tasa real + almacenamiento = <b>${p1(r + a)}</b> por año` + (r + a >= 0 ? `: tener $ 100 en stock todo el año cuesta $ ${(100 * (r + a)).toLocaleString("es-AR", { maximumFractionDigits: 1 })}. ` : ": es negativa, el stock guardado se revaloriza más de lo que cuesta tenerlo. ") +
-      `Pagar a ${miles(L)} días equivale a un descuento de <b>${p1(1 - fp)}</b> sobre la factura.` + (r < 0 ? " <b>La tasa real es negativa: guardar stock casi no cuesta y conviene adelantar compras.</b>" : "");
+      (r < 0 ? " <b>La tasa real es negativa: guardar stock casi no cuesta y conviene adelantar compras.</b>" : "");
   } else $("c-deriv").textContent = "Completá las cuatro tasas con números para ver la tasa real y la tasa de mantenimiento que resultan.";
 }
 function filaItem(it) {
@@ -1800,7 +1923,7 @@ function filaItem(it) {
     </div>
     ${campo("", "Tabla de precios (cantidad: precio unitario; …)", "precios", it.precios)}
     <p class="ayuda-item">Entrá en una casilla para ver qué dato va, de dónde sacarlo y cómo cambia el resultado.</p>`;
-  d.querySelector("button").addEventListener("click", () => { d.remove(); numerarItems(); programarAuto(); });
+  d.querySelector("button").addEventListener("click", () => { d.remove(); numerarItems(); marcarCambios(); });
   d.addEventListener("focusin", ev => { const k = ev.target.dataset && ev.target.dataset.k; if (k && AY_ITEM[k]) d.querySelector(".ayuda-item").innerHTML = AY_ITEM[k](); });
   $("items").appendChild(d);
 }
@@ -1817,11 +1940,11 @@ function numerarItems() {
 }
 function cargarEjemplo() {
   $("items").innerHTML = ""; EJEMPLO.forEach(filaItem); numerarItems();
-  $("c-fin").value = "30"; $("c-inf").value = "18"; $("c-alm").value = "8"; $("c-pp").value = "30"; $("c-ss").value = "eco"; $("c-niv").value = "95"; $("c-interp").value = "tramos";
+  $("c-fin").value = "30"; $("c-inf").value = "18"; $("c-alm").value = "8"; $("c-ss").value = "eco"; $("c-niv").value = "95"; $("c-interp").value = "tramos";
   $("c-pre").checked = true; $("c-pre-v").value = "60000";
   $("c-dep").checked = true; $("c-dep-v").value = "60";
   $("c-min").checked = false; $("c-min-v").value = "20000";
-  $("c-ped").value = "sep"; $("c-s0").value = "2000"; $("c-desc").value = "item"; $("c-tm").value = "0: 0; 30000: 2; 60000: 4; 120000: 6"; $("c-lleg").value = "juntas";
+  $("c-ped").value = "sep"; $("c-s0").value = "2000"; $("c-desc").value = "item"; $("c-tm").value = "0: 0; 30000: 2; 60000: 4; 120000: 6"; $("c-lleg").value = "juntas"; $("c-pago").value = "plazo"; $("c-pp").value = "30"; $("c-dc").value = "3";
   actualizarAyudas();
 }
 const NOM_PED = { sep: "Pedidos separados", jun: "Pedidos juntos" };
@@ -1855,6 +1978,7 @@ function leerCompras() {
   const infl = gral("c-inf", "La inflación", x => x > -100, "tiene que ser un porcentaje") / 100;
   const alm = gral("c-alm", "La tasa de almacenamiento", x => x >= 0, "tiene que ser un porcentaje, cero o más") / 100;
   const plazoPago = gral("c-pp", "El plazo de pago", x => x >= 0, "tiene que ser un número de días, cero o más");
+  const dtoContado = gral("c-dc", "El descuento por pago contado", x => x >= 0 && x < 100, "tiene que estar entre 0 y 100") / 100;
   const ssModo = $("c-ss").value;
   const nivel = ssModo === "fijo" ? gral("c-niv", "El nivel de servicio", x => x >= 50 && x < 100, "tiene que estar entre 50 y 99,99") / 100 : 0.95;
   const lim = (chk, val, et) => { if (!$(chk).checked) return null; const x = numeroEs($(val).value); if (!(x > 0)) throw new Error(`${et} tiene que ser un número mayor que cero, o destildá la restricción.`); return x; };
@@ -1862,99 +1986,209 @@ function leerCompras() {
   if (!(S0 >= 0)) throw new Error("El costo fijo del pedido conjunto tiene que ser un número, cero o más.");
   let tablaMonto;
   try { tablaMonto = parseDescuentos($("c-tm").value); } catch (e) { throw new Error("Descuento por monto: " + e.message); }
-  return { items, iFin, infl, alm, plazoPago, ssModo, nivel, interp: $("c-interp").value === "interp", pedido: $("c-ped").value, desc: $("c-desc").value, S0, tablaMonto, llegada: $("c-lleg").value,
+  return { items, iFin, infl, alm, plazoPago, pago: $("c-pago").value, dtoContado, ssModo, nivel, interp: $("c-interp").value === "interp", pedido: $("c-ped").value, desc: $("c-desc").value, S0, tablaMonto, llegada: $("c-lleg").value,
     presupuesto: lim("c-pre", "c-pre-v", "El presupuesto por pedido"),
     deposito: lim("c-dep", "c-dep-v", "La capacidad de depósito"),
     minimo: lim("c-min", "c-min-v", "La compra mínima") };
 }
-function ejecutarCompras() {
+let ichart = [], escenarios = [];
+const escHtml = t => String(t).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+/* ---------- cálculo de Compras: se hace solo al tocar el botón y queda guardado en memoria ---------- */
+let cacheC = null, cambios = false, tocado = false;
+const fechaTxt = iso => new Date(iso).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+const pc2 = x => (100 * x).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " %";
+function calcularCompras() {
   let cfg;
-  try { cfg = leerCompras(); } catch (e) { $("cerr").textContent = "No pude leer los datos. " + e.message + " Hasta corregirlo, los resultados de abajo corresponden a los últimos datos válidos."; return false; }
-  if (cfg.presupuesto !== null && cfg.minimo !== null && cfg.minimo > cfg.presupuesto) { $("cerr").textContent = "La compra mínima es mayor que el presupuesto por pedido: no hay plan posible."; return false; }
-  $("cerr").textContent = "";
+  const viejo = () => cacheC ? " Los resultados que se ven son del último cálculo válido." : "";
+  try { cfg = leerCompras(); } catch (e) { $("cerr").textContent = "No pude leer los datos. " + e.message + viejo(); return false; }
+  if (cfg.presupuesto !== null && cfg.minimo !== null && cfg.minimo > cfg.presupuesto) { $("cerr").textContent = "La compra mínima es mayor que el presupuesto por pedido: no hay plan posible." + viejo(); return false; }
   const np = entero("np", 10, 100, 40), g = entero("ngen", 20, 300, 150), semilla = entero("seed", 0, 999999, 1234);
   let pr;
-  try { pr = modeloCompras(cfg); } catch (e) { $("cerr").textContent = "Con pedidos juntos, " + e.message; return false; }
-  run = correrTodosN(pr, np, g, semilla);
-  // las seis combinaciones, con los mismos datos, restricciones y semilla
-  escenarios = [];
+  try { pr = modeloCompras(cfg); } catch (e) { $("cerr").textContent = "Con pedidos juntos, " + e.message + viejo(); return false; }
+  $("cerr").textContent = "";
+  const corrida = correrTodosN(pr, np, g, semilla);
+  // las seis combinaciones de pedido y descuento, con los mismos datos, límites y semilla
+  const esc = [];
   for (const pedido of ["sep", "jun"]) for (const desc of ["item", "monto", "ambos"]) {
     const e = { pedido, desc, actual: pedido === cfg.pedido && desc === cfg.desc, total: Infinity, q: null, N: null, error: null };
     try {
-      const m2 = e.actual ? pr : modeloCompras({ ...cfg, pedido, desc }), r2 = e.actual ? run : correrTodosN(m2, np, g, semilla);
+      const m2 = e.actual ? pr : modeloCompras({ ...cfg, pedido, desc }), r2 = e.actual ? corrida : correrTodosN(m2, np, g, semilla);
       MET.forEach(m => { const R = r2[m.id]; if (R.viol[g] === 0 && R.mejor[g] < e.total) { e.total = R.mejor[g]; e.q = m2.plan(R.pts[g]); e.N = m2.detalle(e.q).N; } });
     } catch (err) { e.error = err.message; }
-    escenarios.push(e);
+    esc.push(e);
   }
+  // pago a plazo contra pago contado, cada uno con su mejor forma de comprar
+  const act = esc.find(e => e.actual), optAct = act.q ? { q: act.q, total: act.total } : null, cond = {};
+  for (const pago of ["plazo", "contado"]) {
+    const m = pago === cfg.pago ? pr : modeloCompras({ ...cfg, pago, _ligero: true });
+    const opt = pago === cfg.pago ? optAct : optimoRapido(m, np, g, semilla);
+    cond[pago] = { m, opt, mejor: mejorOpcion(m, opt) };
+  }
+  const dmin = cond.plazo.mejor ? descuentoQueEmpata(cfg, cond.plazo.mejor.total, np, g, semilla) : null;
+  cacheC = { pr, corrida, np, g, semilla, esc, cond, dmin, fecha: new Date().toISOString() };
+  cambios = false;
+  return true;
+}
+function pintarCompras(k) {
+  const c = cacheC, pr = c.pr, cfg = pr.cfg;
+  run = c.corrida; escenarios = c.esc; NP = c.np; GEN = c.g;
   let minf = Infinity;
-  MET.forEach(m => { minf = Math.min(minf, run[m.id].mejor[g]); });
+  MET.forEach(m => { minf = Math.min(minf, run[m.id].mejor[GEN]); });
+  fref = Number.isFinite(minf) ? minf : 0;
   prob = { compras: pr, conocido: false, minimos: [], lb: pr.lb, ub: pr.ub };
   $("ic-title").textContent = pr.conj ? "Costo anual total según la cantidad de pedidos conjuntos por año" : "Costo total por unidad según la cantidad pedida, por ítem";
   $("ic-como").innerHTML = pr.conj
-    ? "<b>Cómo leerlo:</b> la curva es el costo anual de todos los ítems para cada frecuencia de pedido. Los escalones son los cambios de tramo de precio o de descuento. La zona gris no cumple los límites del Paso 5. La cruz es el mejor punto sin límites; los puntos de color, el plan de cada método en esta generación."
-    : "<b>Cómo leerlo:</b> cada curva es lo que termina costando una unidad del ítem (precio, pedidos, mantenimiento y faltantes) según cuánto se pide por vez. Baja cuando se entra a un tramo más barato y vuelve a subir cuando el precio sube o el stock pesa. La cruz es la mejor cantidad sin límites conjuntos; los puntos de color, el plan de cada método en esta generación.";
-  NP = np; GEN = g; fref = Number.isFinite(minf) ? minf : 0;
+    ? "<b>Cómo leerlo:</b> la curva es el costo anual de todos los ítems para cada frecuencia de pedido. Los escalones son los cambios de tramo de precio o de descuento. La zona gris no cumple los límites del Paso 5. La cruz es el mejor punto sin límites; los puntos de color, el plan de cada método."
+    : "<b>Cómo leerlo:</b> cada curva es lo que termina costando una unidad del ítem (precio, pedidos, mantenimiento y faltantes) según cuánto se pide por vez. Baja cuando se entra a un tramo más barato y vuelve a subir cuando el precio sube o el stock pesa. La cruz es la mejor cantidad sin límites conjuntos; los puntos de color, el plan de cada método.";
   const nR = [cfg.presupuesto, cfg.deposito, cfg.minimo].filter(v => v !== null).length;
-  $("desc").textContent = `${NOM_PED[cfg.pedido]} con ${NOM_DESC[cfg.desc]}. ` + `Se busca ${pr.conj ? "cuántos pedidos conjuntos hacer por año, y con eso cuántas unidades pedir de cada uno de los " + pr.n + " ítems," : "cuántas unidades pedir de cada uno de los " + pr.n + " ítems"} para que el costo anual total (compra + pedidos + mantenimiento) sea el menor posible, ${nR ? "cumpliendo " + (nR === 1 ? "la restricción cargada" : "las " + nR + " restricciones cargadas") : "sin restricciones conjuntas"}.`;
+  $("desc").textContent = `Calculado con: ${NOM_PED[cfg.pedido].toLowerCase()}, ${NOM_DESC[cfg.desc]}, ${cfg.pago === "contado" ? "pago contado con " + pc2(cfg.dtoContado) + " de descuento" : "pago a " + miles(cfg.plazoPago) + " días"}, ${nR ? (nR === 1 ? "un límite activo" : nR + " límites activos") : "sin límites conjuntos"}.`;
   $("ch-title").textContent = "Diferencia de costo anual con el mejor plan hallado, por generación";
   $("gen").max = GEN;
-  $("note").textContent = `Supuestos del modelo: demanda pareja en promedio durante el año, con variación de distribución normal; plazo de entrega fijo; lo que falta se entrega después y cuesta el costo de faltante por unidad; todos los precios y costos suben al ritmo de la inflación cargada; tasas efectivas anuales. No incluye impuestos, tipo de cambio ni vencimientos. Cuando la tasa de mantenimiento queda muy baja o negativa por la inflación, el stock de seguridad económico se calcula con la tasa de almacenamiento como piso, para que el colchón no crezca sin límite. Con pedidos separados, cada ítem paga su costo por pedido tantas veces como se pide (demanda ÷ cantidad). Con pedidos juntos, todos los ítems se piden con la misma frecuencia y se paga un único costo fijo por pedido; la variable es la cantidad de pedidos por año. El descuento por ítem toma el precio de la tabla según la cantidad de ese ítem; el descuento por monto se aplica sobre el monto de cada pedido: el del ítem si se piden separados y el de todos los ítems si se piden juntos. Los precios y descuentos se aplican a todas las unidades del pedido. Supone demanda pareja durante el año. El depósito se controla en su pico de ocupación, según cómo lleguen los pedidos (Paso 5). Con pedidos separados, el presupuesto y la compra mínima se calculan como si todos los ítems se pidieran el mismo día. Las cantidades se redondean al múltiplo de compra. Los cuatro métodos son los de la solapa "Con restricciones", ahora con una variable por ítem, y usan ${NP} evaluaciones por generación. Son métodos heurísticos: no garantizan el óptimo exacto, así que conviene probar varias semillas y quedarse con el plan más barato. Todo se calcula en tu navegador. En la curva, las diferencias menores que $ 1 se dibujan sobre ese piso. Los datos precargados son un ejemplo ficticio.`;
-  armarItemCharts(); dibujarEscenarios(); dibujarConclusion(); dibujarCurva(); dibujarTabla(); setGen(0);
-  return true;
+  $("note").textContent = `Supuestos del modelo: demanda pareja en promedio durante el año, con variación de distribución normal; plazo de entrega fijo; lo que falta se entrega después y cuesta el costo de faltante por unidad; todos los precios y costos suben al ritmo de la inflación cargada; tasas efectivas anuales. No incluye impuestos, tipo de cambio ni vencimientos. Cuando la tasa de mantenimiento queda muy baja o negativa por la inflación, el stock de seguridad económico se calcula con la tasa de almacenamiento como piso. Con pedidos separados, cada ítem paga su costo por pedido tantas veces como se pide. Con pedidos juntos, todos los ítems se piden con la misma frecuencia y se paga un único costo fijo por pedido. El descuento por monto se aplica sobre el monto de cada pedido, antes del descuento por pago contado. Los precios y descuentos se aplican a todas las unidades del pedido. El depósito se controla en su pico de ocupación, según cómo lleguen los pedidos. Con pedidos separados, el presupuesto y la compra mínima se calculan como si todos los ítems se pidieran el mismo día. Las cantidades se redondean al múltiplo de compra. Los cuatro métodos son heurísticos y usan ${NP} evaluaciones por generación: no garantizan el óptimo exacto, así que conviene probar varias semillas. Las comparaciones de pago contado se calculan con el método más confiable de los cuatro. Todo se calcula en tu navegador. Los datos precargados son un ejemplo ficticio.`;
+  armarItemCharts(); dibujarEscenarios(); dibujarPago(); dibujarConclusion(); dibujarCurva(); dibujarTabla(); setGen(Math.min(k, GEN));
+  pintarSellos(); refrescarVacio();
+}
+function ejecutarCompras() { if (!calcularCompras()) return false; pintarCompras(cacheC.g); return true; }
+function pintarSellos() {
+  const t = cacheC ? `Calculado: ${fechaTxt(cacheC.fecha)}` + (cambios ? " · hay cambios sin calcular" : "") : "Todavía no se calculó.";
+  ["c-calc", "f-calcsello"].forEach(id => { $(id).textContent = t; $(id).classList.toggle("malo", cambios); });
+  $("concl-viejo").classList.toggle("oculto", !cambios); $("f-viejo").classList.toggle("oculto", !cambios);
+}
+function refrescarVacio() {
+  const C = modo === "compras", F = vista === "frec", vacio = C && !cacheC;
+  ["desc", "concl", "verdict", "cview", "chartcard", "note", "playrow"].forEach(id => $(id).classList.toggle("oculto-v", vacio));
+  $("c-vacio").classList.toggle("oculto", !(vacio && !F));
+  $("f-vacio").classList.toggle("oculto", !(vacio && F)); $("f-cuerpo").classList.toggle("oculto", vacio);
+}
+function marcarCambios() {
+  tocado = true;
+  if (modo !== "compras") return;
+  if ($("auto").checked) { programarAuto(); return; }
+  if (cacheC && !cambios) { cambios = true; pintarSellos(); }
 }
 
-/* ---------- vista de compras ---------- */
-let ichart = [], escenarios = [];
-const escHtml = t => String(t).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+/* ---------- guardar y recuperar los datos cargados ---------- */
+const CAMPOS = ["c-fin", "c-inf", "c-alm", "c-pp", "c-pago", "c-dc", "c-ped", "c-s0", "c-desc", "c-tm", "c-interp", "c-ss", "c-niv", "c-lleg", "c-pre-v", "c-dep-v", "c-min-v"], CHECKS = ["c-pre", "c-dep", "c-min", "auto"];
+function serializarForm() {
+  const o = { v: {}, c: {}, items: [], busq: modo === "compras" ? [$("np").value, $("ngen").value, $("seed").value] : cfgPor.compras };
+  CAMPOS.forEach(id => { o.v[id] = $(id).value; }); CHECKS.forEach(id => { o.c[id] = $(id).checked; });
+  o.items = [...$("items").children].map(d => { const it = {}; d.querySelectorAll("input[data-k]").forEach(i => { it[i.dataset.k] = i.value; }); return it; });
+  return o;
+}
+function aplicarForm(o) {
+  CAMPOS.forEach(id => { if (o.v && id in o.v) $(id).value = o.v[id]; }); CHECKS.forEach(id => { if (o.c && id in o.c) $(id).checked = !!o.c[id]; });
+  if (Array.isArray(o.items) && o.items.length) { $("items").innerHTML = ""; o.items.slice(0, MAXI).forEach(it => filaItem({ nombre: "", D: "", S: "", min: "1", max: "", mult: "1", vol: "0", LT: "0", cv: "0", falt: "0", precios: "", ...it })); }
+  if (Array.isArray(o.busq) && o.busq.length === 3) { cfgPor.compras = o.busq.map(String); if (modo === "compras") [$("np").value, $("ngen").value, $("seed").value] = cfgPor.compras; }
+  numerarItems();
+  if (cacheC) { cambios = true; pintarSellos(); }
+}
+let dbDoc = null, ultimoReg = null;
+function mostrarGuardado(texto) { ["c-saved", "f-saved"].forEach(id => { $(id).textContent = texto; }); }
+function restaurar(reg, donde) {
+  if (!reg || typeof reg.datos !== "string" || !reg.fecha || tocado) return;
+  if (ultimoReg && ultimoReg.fecha >= reg.fecha) return;
+  try { aplicarForm(JSON.parse(reg.datos)); ultimoReg = reg; mostrarGuardado(`Último guardado: ${fechaTxt(reg.fecha)} · ${donde}. Se cargaron esos datos.`); } catch (e) { /* registro ilegible: se ignora */ }
+}
+async function guardarDatos() {
+  const reg = { datos: JSON.stringify(serializarForm()), fecha: new Date().toISOString() };
+  let donde = null;
+  if (dbDoc) { try { await dbDoc.set(reg); donde = "guardado en el artefacto"; } catch (e) { /* sin permiso de escritura o sin conexión */ } }
+  try { localStorage.setItem("compras-guardado", JSON.stringify(reg)); if (!donde) donde = "guardado solo en este navegador"; } catch (e) { /* sin almacenamiento local */ }
+  if (donde) { ultimoReg = reg; mostrarGuardado(`Último guardado: ${fechaTxt(reg.fecha)} · ${donde}.`); }
+  else mostrarGuardado("No se pudo guardar en este entorno.");
+}
+function iniciarGuardado() {
+  try { restaurar(JSON.parse(localStorage.getItem("compras-guardado")), "en este navegador"); } catch (e) { /* nada guardado */ }
+  if (window.claude && typeof window.claude.use === "function") window.claude.use("db").then(db => {
+    if (!db) return;
+    dbDoc = db.doc("guardado/compras");
+    return dbDoc.get().then(s => { if (s.exists) restaurar(s.data(), "en el artefacto"); });
+  }).catch(() => { /* sin base disponible: queda el guardado local */ });
+}
+
+/* ---------- pago contado o a plazo ---------- */
+function nomForma(o) { return !o ? "ninguna cumple los límites" : o.forma === "opt" ? "plan optimizado" : "frecuencia " + FRECS.find(f => f.n === o.forma).nom.toLowerCase(); }
+function dibujarPago() {
+  const c = cacheC, pr = c.pr, cfg = pr.cfg, P = c.cond.plazo, C = c.cond.contado, L = miles(cfg.plazoPago), d = pc2(cfg.dtoContado);
+  const col = (x, pago) => { const o = x.mejor; if (!o) return ["ninguna cumple los límites", "–", "–", "–"]; const dt = x.m.detalle(o.q);
+    return [nomForma(o), plata(o.total), plata(dt.gasto), pr.items.map((it, i) => `${escHtml(it.nombre)} ${miles(o.q[i])}`).join(" · ")]; };
+  const a = col(P), b = col(C), act = pago => cfg.pago === pago ? '<span class="s">condición cargada</span>' : "";
+  $("pago").innerHTML = `<thead><tr><th></th><th class="r">Pagando a ${L} días, sin descuento${act("plazo")}</th><th class="r">Pagando contado, con ${d} de descuento${act("contado")}</th></tr></thead><tbody>` +
+    ["Mejor forma de comprar", "Costo anual total", pr.conj ? "Importe de cada orden conjunta" : "Importe si las órdenes coinciden el mismo día", "Unidades por pedido"].map((et, k) =>
+      `<tr${k === 1 ? ' class="tot"' : ""}><td>${et}</td><td class="${k === 3 ? "" : "n "}r">${a[k]}</td><td class="${k === 3 ? "" : "n "}r">${b[k]}</td></tr>`).join("") + `</tbody>`;
+  let t;
+  if (!P.mejor || !C.mejor) t = "Con los límites cargados, alguna de las dos condiciones de pago no tiene ningún plan posible.";
+  else { const dif = C.mejor.total - P.mejor.total;
+    t = `<b>Con el ${d} ofrecido, pagar contado ${dif < -0.5 ? "conviene: ahorra " + plata(-dif) + " por año" : dif > 0.5 ? "no conviene: cuesta " + plata(dif) + " más por año" : "da lo mismo"}.</b> ` +
+      (c.dmin === null ? "Ni con 50 % de descuento el contado iguala al pago a plazo."
+        : c.dmin === 0 ? "Como pagar a plazo no deja ninguna ventaja con estos datos, cualquier descuento por contado conviene."
+        : `<b>El descuento mínimo a negociar por pagar contado es ${pc2(c.dmin)}.</b> Con ese descuento, la mejor forma de comprar pagando contado cuesta lo mismo que la mejor pagando a ${L} días; con menos, conviene seguir pagando a plazo.`) +
+      ` Regla rápida: ese mínimo es prácticamente el costo financiero del plazo que se resigna, ${pc2(1 - pr.fp)} (tasa financiera de ${pc2(cfg.iFin)} anual durante ${L} días).`; }
+  $("pago-txt").innerHTML = t;
+}
+
+/* ---------- la orden de compra, en una tabla ---------- */
+function tablaOrden(m, q) {
+  const dt = m.detalle(q), u0 = x => Math.round(x).toLocaleString("es-AR"), n1 = x => x.toLocaleString("es-AR", { maximumFractionDigits: 1 });
+  return `<thead><tr><th>Ítem</th><th class="r">Unidades por pedido</th><th class="r">Precio de factura</th><th class="r">Importe de la orden</th><th class="r">Cada cuánto</th><th class="r">Pedir cuando el stock baje a</th></tr></thead><tbody>` +
+    dt.filas.map((f, i) => `<tr><td>${escHtml(m.items[i].nombre)}</td><td class="n r"><b>${miles(f.q)}</b></td><td class="n r">${plata(f.pf, 2)}</td><td class="n r">${plata(f.gasto)}</td><td class="n r">cada ${u0(365 / f.N)} días (${n1(f.N)} por año)</td><td class="n r">${u0(f.reorden)} u</td></tr>`).join("") +
+    `<tr class="tot"><td>${m.conj ? "Total de cada orden de compra conjunta" : "Total si las órdenes coinciden el mismo día"}</td><td></td><td></td><td class="n r">${plata(dt.gasto)}</td><td></td><td></td></tr></tbody>`;
+}
+
+/* ---------- resultado de Compras ---------- */
 function dibujarConclusion() {
-  const pr = prob.compras, cfg = pr.cfg, pc = x => x.toLocaleString("es-AR", { maximumFractionDigits: 1 }) + " %";
+  const c = cacheC, pr = c.pr, cfg = pr.cfg, pc = x => x.toLocaleString("es-AR", { maximumFractionDigits: 1 }) + " %", n1 = x => x.toLocaleString("es-AR", { maximumFractionDigits: 1 });
   const nom = e => `${e.pedido === "sep" ? "pedir cada ítem por separado" : "pedir todos los ítems juntos"} con ${NOM_DESC[e.desc]}`;
   const ok = escenarios.filter(e => Number.isFinite(e.total)), act = escenarios.find(e => e.actual);
   const mejor = ok.reduce((a, e) => !a || e.total < a.total - 0.5 ? e : a, null);
-  const L = [];
-  if (!mejor) {
-    $("concl-t").textContent = "Con estos datos no hay ningún plan de compra que cumpla las restricciones.";
-    L.push("<b>Revisá los límites cargados:</b> el presupuesto por pedido, el depósito o la compra mínima no dejan lugar ni siquiera para los lotes mínimos.");
+  const L = [], N = [], M = [], sec = v => { ["oc-h", "oc-w", "concl-cost", "pq-h", "concl-l", "concl-mas"].forEach(id => $(id).classList.toggle("oculto", !v)); };
+  if (!act.q) {
+    sec(false);
+    $("concl-t").textContent = "Con los datos cargados no hay ningún plan de compra que cumpla los límites.";
+    N.push("<b>Revisá el Paso 5:</b> el presupuesto por pedido, el depósito o la compra mínima no dejan lugar ni para los lotes mínimos.");
+    if (mejor) N.push(`<b>Cambiar la modalidad:</b> ${nom(mejor)} sí tiene un plan posible, de ${plata(mejor.total)} por año. Se elige en el Paso 2.`);
   } else {
-    const esMejor = Number.isFinite(act.total) && act.total <= mejor.total + 0.5;
-    $("concl-t").textContent = `Lo que conviene: ${nom(esMejor ? act : mejor)}. Cuesta ${plata((esMejor ? act : mejor).total)} por año.`;
-    if (esMejor) L.push(`<b>Es la más barata de las seis combinaciones</b> de pedido y descuento${ok.length > 1 ? `: ahorra ${plata(Math.max(...ok.map(e => e.total)) - act.total)} por año frente a la más cara` : ""}.`);
-    else if (Number.isFinite(act.total)) L.push(`<b>La combinación que estás viendo cuesta ${plata(act.total)} por año: ${plata(act.total - mejor.total)} más (${pc(100 * (act.total - mejor.total) / mejor.total)}).</b> Si el proveedor acepta la otra modalidad, conviene cambiar.`);
-    else L.push("<b>La combinación que estás viendo no tiene ningún plan que cumpla las restricciones.</b>");
-    if (Number.isFinite(act.total)) {
-      const dt = pr.detalle(act.q), dias = N => Math.round(365 / N);
-      // qué pedir
-      L.push(pr.conj
-        ? `<b>Qué pedir con la combinación actual:</b> un pedido conjunto cada ${dias(dt.N)} días (${dt.N.toLocaleString("es-AR", { maximumFractionDigits: 1 })} por año) con ${lista(pr.items.map((it, i) => `<b>${miles(act.q[i])}</b> de ${escHtml(it.nombre)}`))}.`
-        : `<b>Qué pedir con la combinación actual:</b> ${lista(pr.items.map((it, i) => `<b>${miles(act.q[i])}</b> de ${escHtml(it.nombre)} cada ${dias(it.D / act.q[i])} días`))}.`);
-      // qué limita
-      const usos = [];
-      if (cfg.presupuesto !== null) usos.push(["el presupuesto por pedido", dt.gasto / cfg.presupuesto]);
-      if (cfg.deposito !== null) usos.push(["el depósito", dt.vol / cfg.deposito]);
-      const dl = pr.detalle(pr.libre), costoR = dt.total - dl.total;
-      if (pr.violDe(dl) === 0 || costoR < 0.5) L.push("<b>Las restricciones no están frenando la compra:</b> el mejor plan sin ellas ya las cumple.");
-      else {
-        usos.sort((a, b) => b[1] - a[1]);
-        const tope = usos.length && usos[0][1] >= 0.9 ? usos[0] : null, minimo = cfg.minimo !== null && dt.gasto < cfg.minimo * 1.05;
-        L.push(`<b>Las restricciones cuestan ${plata(costoR)} por año (${pc(100 * costoR / dl.total)}).</b> ` +
-          (tope ? `Lo que más frena es ${tope[0]}, usado al ${pc(100 * tope[1])}: ampliarlo es lo primero a evaluar.` : minimo ? "Lo que más frena es la compra mínima que exige el proveedor." : "Ninguna queda usada al límite, pero entre todas alejan el plan del óptimo sin restricciones."));
-      }
-      // cuándo pedir
-      L.push(`<b>Cuándo pedir:</b> cuando el stock baje a ${lista(pr.items.map((it, i) => `<b>${Math.round(dt.filas[i].reorden).toLocaleString("es-AR")}</b> de ${escHtml(it.nombre)}`))}. Ese punto de pedido ya incluye el stock de seguridad (${lista(dt.filas.map(f => Math.round(f.ss).toLocaleString("es-AR")))} unidades).`);
-      // finanzas
-      L.push(`<b>Finanzas:</b> pagar a ${miles(cfg.plazoPago)} días equivale a un descuento de ${pc(100 * (1 - pr.fp))} y ahorra ${plata(dt.plazo)} por año. ` +
-        (pr.r < 0 ? `La inflación (${pc(100 * cfg.infl)}) supera a la tasa financiera (${pc(100 * cfg.iFin)}): <b>la tasa real es negativa (${pc(100 * pr.r)}), así que conviene adelantar compras</b> hasta donde lo permitan el depósito y el presupuesto.`
-                  : `Con tasa financiera de ${pc(100 * cfg.iFin)} e inflación de ${pc(100 * cfg.infl)}, la tasa real es ${pc(100 * pr.r)}; sumando almacenamiento, <b>tener stock cuesta ${pc(100 * pr.h)} de su valor por año</b>.`));
-      // dónde está el costo
-      const bruto = dt.compra + dt.pedidos + dt.mant + dt.falt;
-      const pcomp = 100 * dt.compra / bruto, pped = 100 * dt.pedidos / bruto, pman = 100 * dt.mant / bruto, pfal = 100 * dt.falt / bruto;
-      L.push(`<b>Dónde está el costo:</b> ${pc(pcomp)} es compra, ${pc(pped)} pedidos, ${pc(pman)} mantenimiento y ${pc(pfal)} faltantes. ` +
-        (pcomp >= 80 ? "El precio unitario es lo que más pesa: llegar a un tramo más barato o negociar el descuento rinde más que afinar la frecuencia de pedido."
-                     : "Los costos de pedir y de guardar pesan: la frecuencia de pedido importa tanto como el precio."));
-    }
+    sec(true);
+    const dt = pr.detalle(act.q);
+    $("concl-t").textContent = `El mejor plan cuesta ${plata(dt.total)} por año. Lo que hay que comprar está en la tabla.`;
+    $("oc").innerHTML = tablaOrden(pr, act.q);
+    $("concl-cost").innerHTML = pr.conj
+      ? `<b>Cada orden de compra es de ${plata(dt.gasto)}</b> y se emite ${n1(dt.N)} veces por año. Costo total del año, sumando compra, pedidos, mantenimiento del stock y faltantes: <b>${plata(dt.total)}</b>.`
+      : `<b>Cada ítem tiene su propia orden</b>, por el importe de la tabla. Si coincidieran todas el mismo día sumarían ${plata(dt.gasto)}. Costo total del año, sumando compra, pedidos, mantenimiento del stock y faltantes: <b>${plata(dt.total)}</b>.`;
+    // por qué
+    const iguales = MET.filter(m => run[m.id].viol[GEN] === 0 && Math.abs(run[m.id].mejor[GEN] - act.total) <= 0.5).length;
+    L.push(`<b>Es el plan más barato que cumple los límites</b> entre los ${(NP * (GEN + 1)).toLocaleString("es-AR")} que probó cada método. ${iguales === MET.length ? "Los cuatro métodos llegaron al mismo plan, lo que le da firmeza." : iguales + " de los cuatro métodos llegaron a este plan: conviene probar otra semilla para confirmarlo."}`);
+    const usos = [];
+    if (cfg.presupuesto !== null) usos.push(["el presupuesto por pedido", dt.gasto / cfg.presupuesto]);
+    if (cfg.deposito !== null) usos.push(["el depósito", dt.vol / cfg.deposito]);
+    const dl = pr.detalle(pr.libre), costoR = dt.total - dl.total, libreOk = pr.violDe(dl) === 0 || costoR < 0.5;
+    usos.sort((x, y) => y[1] - x[1]);
+    const tope = usos.length && usos[0][1] >= 0.9 ? usos[0] : null;
+    L.push(libreOk ? "<b>Los límites no lo frenan:</b> es el mismo plan que saldría sin límites."
+      : `<b>Está condicionado por los límites:</b> sin ellos costaría ${plata(dl.total)} por año. ${tope ? "El que frena es " + tope[0] + ", usado al " + pc(100 * tope[1]) + "." : ""}`);
+    const bruto = dt.compra + dt.pedidos + dt.mant + dt.falt, pcomp = 100 * dt.compra / bruto;
+    L.push(`<b>Equilibra las tres fuerzas del costo:</b> ${pc(pcomp)} es compra, ${pc(100 * dt.pedidos / bruto)} pedidos, ${pc(100 * dt.mant / bruto)} mantenimiento del stock y ${pc(100 * dt.falt / bruto)} faltantes. Pedir más por vez bajaría el precio y los pedidos, pero subiría el stock; pedir menos, al revés.`);
+    // qué negociar
+    const esMejor = act.total <= mejor.total + 0.5;
+    N.push(esMejor ? "<b>Modalidad:</b> la cargada ya es la más barata de las seis combinaciones de pedido y descuento."
+      : `<b>Modalidad:</b> ${nom(mejor)} bajaría el costo a ${plata(mejor.total)} por año, <b>${plata(act.total - mejor.total)} menos</b> (${pc(100 * (act.total - mejor.total) / act.total)}). Para ver ese plan, elegila en el Paso 2 y volvé a optimizar.`);
+    const P = c.cond.plazo.mejor, Cc = c.cond.contado.mejor;
+    if (P && Cc) { const dif = Cc.total - P.total;
+      N.push(`<b>Pago contado:</b> con el ${pc2(cfg.dtoContado)} cargado, pagar contado ${dif < -0.5 ? "conviene: " + plata(-dif) + " menos por año" : dif > 0.5 ? "no conviene: " + plata(dif) + " más por año" : "da lo mismo"} que pagar a ${miles(cfg.plazoPago)} días.` +
+        (c.dmin ? ` <b>El descuento mínimo a pedir por pagar contado es ${pc2(c.dmin)}</b>: por debajo de eso, conviene pagar a plazo.` : "")); }
+    if (!libreOk) N.push(`<b>Límites:</b> cuestan ${plata(costoR)} por año (${pc(100 * costoR / dl.total)}).${tope ? " Ampliar " + tope[0] + " es lo primero a evaluar." : ""}${cfg.deposito !== null && !pr.conj && !pr.escalona ? " Escalonar las entregas (Paso 5) también baja el pico del depósito." : ""}`);
+    // más detalle
+    M.push(`<b>Stock de seguridad:</b> ${lista(pr.items.map((it, i) => `${Math.round(dt.filas[i].ss).toLocaleString("es-AR")} de ${escHtml(it.nombre)}`))}. Ya está incluido en el punto de pedido de la tabla.`);
+    M.push(pr.contado ? `<b>Pago:</b> contado con ${pc2(cfg.dtoContado)} de descuento, que ahorra ${plata(dt.ahorroContado)} por año sobre el precio de lista.`
+                      : `<b>Pago:</b> a ${miles(cfg.plazoPago)} días. Equivale a un descuento de ${pc2(1 - pr.fp)} y ahorra ${plata(dt.plazo)} por año.`);
+    M.push(pr.r < 0 ? `<b>Tasas:</b> la inflación (${pc(100 * cfg.infl)}) supera a la tasa financiera (${pc(100 * cfg.iFin)}), así que la tasa real es negativa (${pc(100 * pr.r)}): conviene adelantar compras hasta donde lo permitan los límites.`
+                    : `<b>Tasas:</b> con tasa financiera de ${pc(100 * cfg.iFin)} e inflación de ${pc(100 * cfg.infl)}, la tasa real es ${pc(100 * pr.r)}; sumando almacenamiento, tener stock cuesta ${pc(100 * pr.h)} de su valor por año.`);
+    M.push(pcomp >= 80 ? "<b>Dónde mirar:</b> el precio unitario es lo que más pesa. Llegar a un tramo más barato o negociar el descuento rinde más que afinar la frecuencia de pedido."
+                       : "<b>Dónde mirar:</b> los costos de pedir y de guardar pesan: la frecuencia de pedido importa tanto como el precio.");
   }
-  $("concl-l").innerHTML = L.map(t => `<li>${t}</li>`).join("");
-  $("concl-p").textContent = `Vale para los datos cargados y para el resultado final de esta corrida (semilla ${$("seed").value}). Los datos precargados son un ejemplo ficticio.`;
+  const ul = (id, a) => { $(id).innerHTML = a.map(t => `<li>${t}</li>`).join(""); };
+  ul("concl-l", L); ul("concl-n", N); ul("concl-m", M);
+  $("concl-p").textContent = `Vale para los datos cargados y para el cálculo del ${fechaTxt(c.fecha)} (semilla ${c.semilla}). Los datos precargados son un ejemplo ficticio.`;
 }
 function dibujarEscenarios() {
   const pr = prob.compras, ok = escenarios.filter(e => Number.isFinite(e.total));
@@ -2082,12 +2316,14 @@ function dibujarCompras() {
       `<b>Stock de seguridad:</b> el colchón por si la demanda sale más alta mientras llega el pedido. Variabilidad de la demanda en el plazo de entrega = ${n1(100 * it.cv)} % × ${miles(it.D / 12)} u por mes × raíz(${miles(it.LT)} ÷ 30) = ${u0(it.sigmaL)} u. Por el factor de seguridad ${n2(f.z)}: <b>${u0(f.ss)} u</b>.`,
       `<b>Punto de pedido:</b> el nivel de stock al que hay que emitir el pedido = demanda durante el plazo de entrega (${miles(it.D)} × ${miles(it.LT)} ÷ 365 = ${u0(dLT)}) + stock de seguridad (${u0(f.ss)}) = <b>${u0(f.reorden)} u</b>.`,
       `<b>Ciclos sin faltante:</b> de cada 100 pedidos, en cuántos no llega a faltar mercadería antes de que entre el siguiente: <b>${pct(f.nivel)}</b>.`,
-      `<b>Precio de factura:</b> el del tramo de la tabla que corresponde a ${miles(f.q)} unidades${pr.usaMonto ? `, menos el descuento por monto (${pct(f.dto)})` : ""}: <b>${plata(f.pf, 2)}</b>. <b>Costo efectivo</b> = precio de factura × factor de pago (${pr.fp.toLocaleString("es-AR", { maximumFractionDigits: 4 })}) = <b>${plata(f.pe, 2)}</b>: lo que cuesta en plata de hoy, pagando a ${miles(cfg.plazoPago)} días.`
+      `<b>Precio de factura:</b> el del tramo de la tabla que corresponde a ${miles(f.q)} unidades${pr.usaMonto ? `, menos el descuento por monto (${pct(f.dto)})` : ""}: <b>${plata(f.pf, 2)}</b>. ` + (pr.contado ? `Ya incluye el ${pc2(cfg.dtoContado)} de descuento por pago contado. <b>Costo efectivo</b> = <b>${plata(f.pe, 2)}</b>: igual al precio de factura, porque se paga al recibir.`
+        : `<b>Costo efectivo</b> = precio de factura × factor de pago (${pr.fp.toLocaleString("es-AR", { maximumFractionDigits: 4 })}) = <b>${plata(f.pe, 2)}</b>: lo que cuesta en plata de hoy, pagando a ${miles(cfg.plazoPago)} días.`)
     ].map(t => `<li>${t}</li>`).join("");
     $("exp2-t").textContent = `Cómo sale cada costo, con los datos de ${it.nombre}`;
     $("exp2").innerHTML = [
       `<b>Compra</b> = demanda × precio de factura = ${miles(it.D)} × ${plata(f.pf, 2)} = <b>${plata(f.compra)}</b>.`,
-      `<b>Beneficio del plazo de pago</b> = compra × (1 − factor de pago) = ${plata(f.compra)} × ${pct(1 - pr.fp)} = <b>${plata(f.plazo)}</b>. Es lo que se ahorra por pagar después de recibir; por eso resta.`,
+      pr.contado ? `<b>Beneficio del plazo de pago</b> = <b>${plata(0)}</b>: pagando contado no hay plazo. A cambio, el descuento por contado ya bajó la compra en ${plata(f.ahorroContado)} por año.`
+                 : `<b>Beneficio del plazo de pago</b> = compra × (1 − factor de pago) = ${plata(f.compra)} × ${pct(1 - pr.fp)} = <b>${plata(f.plazo)}</b>. Es lo que se ahorra por pagar después de recibir; por eso resta.`,
       pr.conj ? `<b>Pedidos</b> = pedidos conjuntos por año × costo fijo del pedido = ${n1(dt.N)} × ${plata(cfg.S0)} = <b>${plata(dt.pedidos)}</b>. Es un solo costo para todos los ítems.`
               : `<b>Pedidos</b> = pedidos por año × costo por pedido = ${n1(f.N)} × ${plata(it.S)} = <b>${plata(f.pedidos)}</b>.`,
       `<b>Mantenimiento</b> = tasa de mantenimiento × costo efectivo × (unidades por pedido ÷ 2 + stock de seguridad) = ${pct(pr.h)} × ${plata(f.pe, 2)} × (${miles(f.q / 2)} + ${u0(f.ss)}) = <b>${plata(f.mant)}</b>. Se divide por 2 porque el stock baja de la cantidad pedida a cero: en promedio hay la mitad. El stock de seguridad se suma entero porque está siempre.`,
@@ -2157,15 +2393,12 @@ function aplicarVista() {
   $("fview").classList.toggle("oculto", !F);
 }
 function dibujarFrecuencia() {
-  const err = $("cerr").textContent, pr = prob && prob.compras;
-  if (!pr || err) {
-    $("f-param").textContent = ""; $("f-t").textContent = "No se puede comparar: hay un dato para corregir en la solapa Compras.";
-    $("f-l").innerHTML = ""; $("f-l").appendChild(Object.assign(document.createElement("li"), { textContent: err || "Cargá los datos en la solapa Compras." }));
-    $("f-p").textContent = ""; ["mx1", "mx2"].forEach(id => { $(id).innerHTML = ""; }); return;
-  }
+  refrescarVacio(); pintarSellos();
+  if (!cacheC) return;
+  const pr = cacheC.pr;
   const cfg = pr.cfg, pc = x => x.toLocaleString("es-AR", { maximumFractionDigits: 1 }) + " %", n1 = x => x.toLocaleString("es-AR", { maximumFractionDigits: 1 });
   const lim = [cfg.presupuesto !== null ? `presupuesto ${plata(cfg.presupuesto)} por pedido` : null, cfg.deposito !== null ? `depósito ${miles(cfg.deposito)} m³` : null, cfg.minimo !== null ? `compra mínima ${plata(cfg.minimo)}` : null].filter(Boolean);
-  $("f-param").textContent = `Usa los datos cargados en la solapa Compras: ${pr.n} ítems, ${NOM_PED[cfg.pedido].toLowerCase()}, ${NOM_DESC[cfg.desc]}, tasa de mantenimiento ${pc(100 * pr.h)} anual, plazo de pago ${miles(cfg.plazoPago)} días${cfg.deposito !== null && !pr.conj ? (pr.escalona ? ", entregas escalonadas" : ", entregas el mismo día") : ""}` + (lim.length ? `, límites: ${lista(lim)}.` : ", sin límites conjuntos.");
+  $("f-param").textContent = `Usa los datos cargados en la solapa Compras: ${pr.n} ítems, ${NOM_PED[cfg.pedido].toLowerCase()}, ${NOM_DESC[cfg.desc]}, tasa de mantenimiento ${pc(100 * pr.h)} anual, ${cfg.pago === "contado" ? "pago contado con " + pc2(cfg.dtoContado) + " de descuento" : "pago a " + miles(cfg.plazoPago) + " días"}${cfg.deposito !== null && !pr.conj ? (pr.escalona ? ", entregas escalonadas" : ", entregas el mismo día") : ""}` + (lim.length ? `, límites: ${lista(lim)}.` : ", sin límites conjuntos.");
   // una columna por frecuencia fija, más el plan optimizado
   const cols = FRECS.map(fr => { const q = pr.porFrecuencia(fr.n), dt = pr.detalle(q); return { ...fr, q, dt, v: pr.violDe(dt), fija: true }; });
   const act = escenarios.find(e => e.actual), opt = act && act.q ? { nom: "Optimizado", q: act.q, dt: pr.detalle(act.q), v: 0, fija: false } : null;
@@ -2182,7 +2415,11 @@ function dibujarFrecuencia() {
     h += `<tr><td data-i="${i}"></td>${todas.map(c => `<td class="n r${c === m ? " mejor" : ""}${c.fija ? "" : " opt"}">${celda(c, i)}</td>`).join("")}<td>${m.nom}</td></tr>`;
   });
   if (pr.conj) h += `<tr><td>Costo del pedido conjunto</td>${todas.map(c => `<td class="n r${c.fija ? "" : " opt"}">${plata(c.dt.pedidos)}<span class="s">${n1(c.dt.N)} ${Math.abs(c.dt.N - 1) < 0.05 ? "pedido" : "pedidos"}</span></td>`).join("")}<td></td></tr>`;
-  h += `<tr class="tot"><td>Costo anual total</td>${todas.map(c => `<td class="n r${c === mejorF ? " mejor" : ""}${c.fija ? "" : " opt"}">${plata(c.dt.total)}</td>`).join("")}<td>${mejorF ? mejorF.nom : "ninguna cumple"}</td></tr>`;
+  h += `<tr class="tot"><td>Costo anual total<span class="s">${cfg.pago === "contado" ? "pagando contado con " + pc2(cfg.dtoContado) + " de descuento" : "pagando a " + miles(cfg.plazoPago) + " días"}</span></td>${todas.map(c => `<td class="n r${c === mejorF ? " mejor" : ""}${c.fija ? "" : " opt"}">${plata(c.dt.total)}</td>`).join("")}<td>${mejorF ? mejorF.nom : "ninguna cumple"}</td></tr>`;
+  // la otra condición de pago, con las mismas cantidades, y el descuento por contado que empata
+  { const otra = cfg.pago === "plazo" ? "contado" : "plazo", mO = cacheC.cond[otra].m, mP = cacheC.cond.plazo.m, oO = cacheC.cond[otra].opt;
+    h += `<tr><td>Costo anual total ${otra === "contado" ? "si se paga contado con " + pc2(cfg.dtoContado) + " de descuento" : "si se paga a " + miles(cfg.plazoPago) + " días, sin descuento"}<span class="s">con las mismas cantidades; el optimizado, con su propio plan</span></td>${todas.map(c => `<td class="n r${c.fija ? "" : " opt"}">${c.fija ? plata(mO.detalle(c.q).total) : oO ? plata(oO.total) : "–"}</td>`).join("")}<td></td></tr>`;
+    h += `<tr><td>Descuento por contado que empata con pagar a ${miles(cfg.plazoPago)} días<span class="s">con las mismas cantidades</span></td>${todas.map(c => { const d = descuentoQueEmpataFijo(cfg, c.q, mP.detalle(c.q).total); return `<td class="n r${c.fija ? "" : " opt"}">${d === null ? "más de 50 %" : pc2(d)}</td>`; }).join("")}<td></td></tr>`; }
   if (ref) h += `<tr><td>Diferencia con ${opt ? "el optimizado" : "la mejor"}</td>${todas.map(c => { const d = c.dt.total - ref.dt.total; return `<td class="n r${c.fija ? "" : " opt"}">${c === ref ? "referencia" : (d >= 0 ? "+ " : "− ") + plata(Math.abs(d))}<span class="s">${c === ref ? "" : (d >= 0 ? "+" : "−") + pc(100 * Math.abs(d) / ref.dt.total)}</span></td>`; }).join("")}<td></td></tr>`;
   // límites: cada uno en su fila, con el pico y el promedio del depósito
   todas.forEach(c => { c.pre = cfg.presupuesto !== null && c.dt.gasto > cfg.presupuesto; c.dep = cfg.deposito !== null && c.dt.vol > cfg.deposito; c.min = cfg.minimo !== null && c.dt.gasto < cfg.minimo;
@@ -2237,6 +2474,10 @@ function dibujarFrecuencia() {
     `<tr><td>Diferencia entre los dos cálculos</td>${todas.map(c => `<td class="n r${cls(c)}${Math.abs(difV(c)) > 1 ? " mal" : ""}">${(difV(c) >= 0 ? "+" : "−") + Math.abs(difV(c)).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} %</td>`).join("")}</tr></tbody>`;
   // conclusión
   const L = [], noCumplen = cols.filter(c => c.v > 0);
+  { const rec = opt && (!mejorF || opt.dt.total <= mejorF.dt.total + 0.005 * opt.dt.total) ? opt : mejorF;
+    ["f-oc-h", "f-oc-w", "f-cost"].forEach(id => $(id).classList.toggle("oculto", !rec));
+    if (rec) { $("f-oc").innerHTML = tablaOrden(pr, rec.q);
+      $("f-cost").innerHTML = `Es ${rec.fija ? "la compra " + rec.nom.toLowerCase() : "el plan optimizado"}. ${pr.conj ? `<b>Cada orden de compra es de ${plata(rec.dt.gasto)}.</b>` : `<b>Cada ítem tiene su propia orden</b>, por el importe de la tabla; si coincidieran todas el mismo día sumarían ${plata(rec.dt.gasto)}.`} Costo total del año: <b>${plata(rec.dt.total)}</b>.`; } }
   if (!opt && !mejorF) { $("f-t").textContent = "Ni el plan optimizado ni ninguna frecuencia fija cumplen los límites cargados."; L.push("<b>Revisá el presupuesto por pedido, el depósito o la compra mínima</b> en el Paso 5 de la solapa Compras."); }
   else {
     const dif = opt && mejorF ? mejorF.dt.total - opt.dt.total : null;
@@ -2265,17 +2506,26 @@ function dibujarFrecuencia() {
     { const maxDif = Math.max(...todas.map(c => Math.abs(difV(c)))), ordM = [...todas].sort((x, y) => x.dt.total - y.dt.total).map(c => c.nom).join(), ordF = [...todas].sort((x, y) => x.fl.equivalente - y.fl.equivalente).map(c => c.nom).join();
       L.push(`<b>Inflación:</b> con ${pc(100 * cfg.infl)} anual, comprando todos los meses la última compra se paga ${pc(100 * (Math.pow(1 + cfg.infl, 11 / 12) - 1))} más cara que la primera, y en el año se facturan ${plata(a.fl.nominal)} contra ${plata(z.fl.nominal)} de comprar todo al inicio. Pero quien compra todo al inicio pone la plata antes: traído a pesos de hoy con la tasa financiera de ${pc(100 * cfg.iFin)}, lo que queda es la tasa real (${pc(100 * pr.r)}). ` +
         `<b>Ese efecto ya está en todos los costos de la matriz.</b> Verificado con un segundo cálculo, compra por compra y con precios indexados: la diferencia máxima es ${pc(maxDif)}` + (ordM === ordF ? " y el orden entre las alternativas es el mismo." : ". <b>Atención: los dos cálculos ordenan distinto dos alternativas muy parejas; conviene mirar la tercera matriz.</b>")); }
+    { const P = cacheC.cond.plazo.mejor, Cc = cacheC.cond.contado.mejor;
+      if (P && Cc) { const dif = Cc.total - P.total;
+        L.push(`<b>Pago contado:</b> comparando la mejor forma de comprar con cada condición, pagar contado con ${pc2(cfg.dtoContado)} de descuento cuesta ${plata(Cc.total)} por año (${nomForma(Cc)}) y pagar a ${miles(cfg.plazoPago)} días cuesta ${plata(P.total)} (${nomForma(P)}): el contado ${dif < -0.5 ? "conviene, " + plata(-dif) + " menos" : dif > 0.5 ? "no conviene, " + plata(dif) + " más" : "da lo mismo"}.` +
+          (cacheC.dmin ? ` <b>El descuento mínimo a negociar por pagar contado es ${pc2(cacheC.dmin)}</b>: con ese descuento el contado iguala a la mejor de todas las opciones a plazo (optimizada, mensual, bimestral, trimestral, semestral o anual).` : cacheC.dmin === 0 ? " Con estos datos, cualquier descuento por contado conviene." : "")); } }
     if (opt) L.push(`<b>Plan optimizado:</b> ${pr.conj ? `${n1(opt.dt.N)} pedidos conjuntos por año con ` : ""}${lista(pr.items.map((it, i) => `<b>${miles(opt.q[i])}</b> de ${escHtml(it.nombre)}${pr.conj ? "" : ` (${n1(opt.dt.filas[i].N)} veces por año)`}`))}.`);
   }
   $("f-l").innerHTML = L.map(t => `<li>${t}</li>`).join("");
-  $("f-p").textContent = `Vale para los datos cargados en la solapa Compras y para el resultado de la última corrida (semilla ${$("seed").value}). Los datos precargados son un ejemplo ficticio.`;
+  $("f-p").textContent = `Vale para los datos de la solapa Compras y para el cálculo del ${fechaTxt(cacheC.fecha)} (semilla ${cacheC.semilla}). Los datos precargados son un ejemplo ficticio.`;
 }
 function fijarSolapa(tab, primera) {
   vista = tab === "frec" ? "frec" : "plan";
   fijarModo(tab === "frec" ? "compras" : tab, primera);
   document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.modo === tab)));
-  aplicarVista();
-  if (vista === "frec") { pausar(); if (run && prob && prob.compras && !$("cerr").textContent) setGen(GEN); dibujarFrecuencia(); }
+  aplicarVista(); refrescarVacio();
+  if (vista === "frec") { pausar(); if (cacheC) setGen(GEN); dibujarFrecuencia(); }
+}
+function calcularDesdeFrecuencia() {
+  const ok = calcularCompras();
+  ["f-err", "f-err2"].forEach(id => { $(id).textContent = ok ? "" : $("cerr").textContent + " Corregilo en la solapa Compras."; });
+  if (ok) { pintarCompras(cacheC.g); dibujarFrecuencia(); }
 }
 
 function guardarForm() {
@@ -2677,7 +2927,7 @@ function veredicto() {
 }
 
 /* ---------- estado ---------- */
-function dibujarPaneles() { if (!run) return; if (modo === "compras") dibujarCompras(); else MET.forEach(dibujarPanel); }
+function dibujarPaneles() { if (!run) return; if (modo === "compras") { if (cacheC && prob && prob.compras) dibujarCompras(); } else if (prob && !prob.compras) MET.forEach(dibujarPanel); }
 function setGen(k) {
   gen = k;
   $("gen").value = k;
@@ -2699,27 +2949,24 @@ function fijarModo(nuevo, primera) {
   $("rlist").hidden = $("radd").hidden = modo !== "restr";
   $("err").textContent = ""; $("cerr").textContent = "";
   nombrarMetodos();
-  if (C) { $("propia").hidden = true; correr(); return; }
+  if (C) { $("propia").hidden = true; pausar(); if (cacheC) pintarCompras(cacheC.g); pintarSellos(); refrescarVacio(); return; }
   armarFunciones(); cargarForm();
-  elegir(casoPor[modo]);
+  elegir(casoPor[modo]); refrescarVacio();
 }
 function elegir(k) {
   caso = k; casoPor[modo] = k;
   [...seg.children].forEach(b => b.setAttribute("aria-pressed", String(b.dataset.k === k)));
   $("propia").hidden = k !== "propia";
   $("err").textContent = "";
-  correr();
+  correr("pausa");
 }
 function correr(auto) {
   pausar();
-  if (!ejecutar()) return;
-  if (auto === true) setGen(GEN);            // actualización automática: muestra directamente el resultado final
-  else if (!reducido) reproducir();
+  if (!ejecutar()) { refrescarVacio(); return; }
+  if (modo === "compras") { if (vista === "frec") dibujarFrecuencia(); return; }   // en Compras se muestra directamente el resultado final
+  if (auto === "pausa" || reducido) return;                                          // al abrir o elegir una función queda quieto en la generación 0
+  reproducir();
 }
-// cualquier cambio en los datos vuelve a calcular todo, sin tocar ningún botón
-let tAuto = null;
-function programarAuto() { clearTimeout(tAuto); tAuto = setTimeout(() => { correr(true); if (vista === "frec") dibujarFrecuencia(); }, 600); }
-function esDato(el) { return el && (el.closest("#cform") || el.closest("#propia") || ["np", "ngen", "seed"].includes(el.id)); }
 function reproducir() {
   if (gen >= GEN) setGen(0);
   playing = true; last = 0; $("play").textContent = "Pausar";
@@ -2737,16 +2984,23 @@ function tick(ts) {
   requestAnimationFrame(tick);
 }
 const reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
+// recálculo automático: solo en Compras y solo si la casilla está tildada
+let tAuto = null;
+function programarAuto() { clearTimeout(tAuto); tAuto = setTimeout(() => { correr(true); }, 700); }
+function esDatoCompras(el) { return el && el.id !== "auto" && (el.closest("#cform") || (modo === "compras" && ["np", "ngen", "seed"].includes(el.id))); }
 $("form").addEventListener("submit", ev => { ev.preventDefault(); clearTimeout(tAuto); correr(); });
-$("form").addEventListener("input", ev => { if (esDato(ev.target)) programarAuto(); });
-$("form").addEventListener("change", ev => { if (esDato(ev.target)) programarAuto(); });
+$("form").addEventListener("input", ev => { if (esDatoCompras(ev.target)) marcarCambios(); });
+$("form").addEventListener("change", ev => { if (esDatoCompras(ev.target)) marcarCambios(); });
+$("auto").addEventListener("change", () => { if ($("auto").checked && (cambios || !cacheC)) correr(true); });
+$("c-save").addEventListener("click", guardarDatos); $("f-save").addEventListener("click", guardarDatos);
+$("f-calc").addEventListener("click", calcularDesdeFrecuencia); $("f-recalc").addEventListener("click", calcularDesdeFrecuencia);
+$("f-ir2").addEventListener("click", () => { fijarSolapa("compras"); try { location.hash = RUTA.compras; } catch (e) { /* sin acceso al hash */ } });
 $("addr").addEventListener("click", () => { if ($("rlist").children.length < MAXR) { filaRestriccion(""); numerar(); $("rlist").lastChild.querySelector("input").focus(); } });
 const RUTA = { libre: "sin-restricciones", restr: "con-restricciones", compras: "compras", frec: "frecuencia" };
 const modoDeHash = () => { const k = Object.keys(RUTA).find(m => location.hash === "#" + RUTA[m]); return k || "libre"; };
 $("f-ir").addEventListener("click", () => { fijarSolapa("compras"); try { location.hash = RUTA.compras; } catch (e) { /* sin acceso al hash */ } window.scrollTo(0, 0); });
-$("additem").addEventListener("click", () => { if ($("items").children.length < MAXI) { filaItem({ nombre: "", D: "", S: "", min: "1", max: "", mult: "1", vol: "0", LT: "0", cv: "0", falt: "0", precios: "" }); numerarItems(); $("items").lastChild.querySelector("input").focus(); } });
-$("c-ej").addEventListener("click", () => { cargarEjemplo(); correr(); });
+$("additem").addEventListener("click", () => { if ($("items").children.length < MAXI) { filaItem({ nombre: "", D: "", S: "", min: "1", max: "", mult: "1", vol: "0", LT: "0", cv: "0", falt: "0", precios: "" }); numerarItems(); marcarCambios(); $("items").lastChild.querySelector("input").focus(); } });
+$("c-ej").addEventListener("click", () => { cargarEjemplo(); marcarCambios(); });
 $("cform").addEventListener("input", actualizarAyudas);
 $("cform").addEventListener("change", actualizarAyudas);
 cargarEjemplo();
@@ -2766,6 +3020,7 @@ new MutationObserver(repintar).observe(document.documentElement, { attributes: t
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", repintar);
 
 fijarSolapa(modoDeHash(), true);
+iniciarGuardado();
 </script>
 </body>
 </html>
