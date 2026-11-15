@@ -418,11 +418,25 @@ td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
       <section class="paso">
         <h3><span class="np">Paso 5</span> Límites de la compra</h3>
-        <p class="intro">Tildá los que apliquen. El resultado informa cuánto cuestan los límites por año, que es el dato para decidir si conviene ampliarlos.</p>
+        <p class="intro">Elegí qué límites aplicar, o ninguno para calcular sin restricciones. Con límites, el resultado informa además cuánto costaría el plan sin ellos y cuánto se ahorra ampliando cada uno.</p>
         <div class="campos">
-          <div class="campo"><label class="chk" for="c-pre-v"><input type="checkbox" id="c-pre" checked> Presupuesto máximo por pedido ($)</label><input type="text" id="c-pre-v" value="60000" inputmode="decimal">
+          <div class="campo"><label for="c-lim">Qué límites aplicar</label>
+            <select id="c-lim">
+              <option value="ninguno">Ninguno: calcular sin restricciones</option>
+              <option value="pre">Solo el presupuesto por pedido</option>
+              <option value="dep">Solo la capacidad de depósito</option>
+              <option value="ambos" selected>Presupuesto y capacidad de depósito</option>
+            </select>
+            <p class="ayuda"><b>Qué es:</b> los topes que la compra no puede pasar. Con «Ninguno» se calcula el plan más barato sin ningún tope.<br><b>Para comparar:</b> calculá con los límites y mirá en el recuadro azul cuánto costaría sin ellos; o elegí «Ninguno» y volvé a calcular.</p></div>
+          <div class="campo"><label for="c-minsel">Compra mínima del proveedor</label>
+            <select id="c-minsel">
+              <option value="no" selected>No exige un monto mínimo</option>
+              <option value="si">Exige un monto mínimo por pedido</option>
+            </select>
+            <p class="ayuda"><b>Qué es:</b> si el proveedor solo toma pedidos a partir de cierto monto. Si lo exige, aparece la casilla para cargarlo.</p></div>
+          <div class="campo" id="w-pre"><input type="checkbox" id="c-pre" checked hidden><label for="c-pre-v">Presupuesto máximo por pedido ($)</label><input type="text" id="c-pre-v" value="60000" inputmode="decimal">
             <p class="ayuda"><b>Qué es:</b> el tope de plata que se puede comprometer en un pedido, por caja o por límite de crédito.<br><b>Impacto:</b> obliga a pedidos más chicos y puede impedir llegar a los tramos de precio más baratos.</p></div>
-          <div class="campo"><label class="chk" for="c-dep-v"><input type="checkbox" id="c-dep" checked> Capacidad de depósito (m³)</label><input type="text" id="c-dep-v" value="60" inputmode="decimal">
+          <div class="campo" id="w-dep"><input type="checkbox" id="c-dep" checked hidden><label for="c-dep-v">Capacidad de depósito (m³)</label><input type="text" id="c-dep-v" value="60" inputmode="decimal">
             <p class="ayuda"><b>Qué es:</b> el espacio disponible para estos ítems. El stock de cada ítem sube el día que llega su pedido y después baja con el consumo; lo que se compara con la capacidad es el <b>pico</b> de ocupación, no el promedio.<br><b>Impacto:</b> si es chico, obliga a pedir menos y más seguido, a precios más caros.</p></div>
           <div class="campo" id="w-lleg"><label for="c-lleg">Cómo llegan los pedidos al depósito</label>
             <select id="c-lleg">
@@ -430,7 +444,7 @@ td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
               <option value="escalonadas">Escalonados: cada ítem en una fecha distinta</option>
             </select>
             <p class="ayuda" id="ay-lleg"></p></div>
-          <div class="campo"><label class="chk" for="c-min-v"><input type="checkbox" id="c-min"> Compra mínima por pedido ($)</label><input type="text" id="c-min-v" value="20000" inputmode="decimal">
+          <div class="campo" id="w-min"><input type="checkbox" id="c-min" hidden><label for="c-min-v">Compra mínima por pedido ($)</label><input type="text" id="c-min-v" value="20000" inputmode="decimal">
             <p class="ayuda"><b>Qué es:</b> el monto mínimo que exige el proveedor para tomar un pedido.<br><b>Impacto:</b> obliga a pedidos más grandes que los que convendrían por costo.</p></div>
         </div>
       </section>
@@ -2386,6 +2400,7 @@ function cargarEjemplo() {
   $("c-pre").checked = true; $("c-pre-v").value = "60000";
   $("c-dep").checked = true; $("c-dep-v").value = "60";
   $("c-min").checked = false; $("c-min-v").value = "20000";
+  menuDesdeLimites();
   $("c-ped").value = "sep"; $("c-s0").value = "2000"; $("c-desc").value = "item"; $("c-tm").value = "0: 0; 30000: 2; 60000: 4; 120000: 6"; $("c-lleg").value = "juntas";
   actualizarAyudas();
 }
@@ -2422,7 +2437,7 @@ function leerCompras() {
   const plazoPago = 0, dtoContado = 0;            // la condición de pago llega de la solapa Condiciones de pago (cfg.pagoGen)
   const ssModo = $("c-ss").value;
   const nivel = ssModo === "fijo" ? gral("c-niv", "El nivel de servicio", x => x >= 50 && x < 100, "tiene que estar entre 50 y 99,99") / 100 : 0.95;
-  const lim = (chk, val, et) => { if (!$(chk).checked) return null; const x = numeroEs($(val).value); if (!(x > 0)) throw new Error(`${et} tiene que ser un número mayor que cero, o destildá la restricción.`); return x; };
+  const lim = (chk, val, et) => { if (!$(chk).checked) return null; const x = numeroEs($(val).value); if (!(x > 0)) throw new Error(`${et} tiene que ser un número mayor que cero, o elegí no aplicarlo en el paso 5.`); return x; };
   const S0 = numeroEs($("c-s0").value);
   if (!(S0 >= 0)) throw new Error("El costo fijo del pedido conjunto tiene que ser un número, cero o más.");
   let tablaMonto;
@@ -2544,6 +2559,7 @@ function aplicarForm(o) {
   numerarItems();
   if (Array.isArray(o.ofertas) && o.ofertas.length) { $("ofertas").innerHTML = ""; o.ofertas.slice(0, MAXO).forEach(filaOferta); numerarOfertas(); }
   refrescarCondOpts(o.v && o.v["c-cond"] !== undefined ? o.v["c-cond"] : "mejor");
+  menuDesdeLimites();
   if (cacheC) { cambios = true; pintarSellos(); }
   if (cacheP) { cambiosP = true; pintarSelloP(); }
   actualizarBaseP(); actualizarAyudas();
@@ -2603,6 +2619,22 @@ function textoLimite(l) {
   const Nom = l.nom.charAt(0).toUpperCase() + l.nom.slice(1);
   return l.sin < 0.5 ? `<b>${Nom}</b> (hoy ${l.actual}) por sí solo no frena el plan: cambiarlo solo a él no ahorra nada.`
     : `<b>${Nom}</b> (hoy ${l.actual}): ${l.verbo}, a ${l.nuevo}, ahorra <b>${plata(l.mas)}</b> por año; sin ese límite, ${plata(l.sin)}.`;
+}
+/* ---------- límites: el menú del paso 5 maneja las casillas internas ---------- */
+function mostrarLimites() {
+  $("w-pre").classList.toggle("oculto", !$("c-pre").checked);
+  $("w-dep").classList.toggle("oculto", !$("c-dep").checked);
+  $("w-min").classList.toggle("oculto", !$("c-min").checked);
+}
+function limitesDesdeMenu() {
+  const v = $("c-lim").value;
+  $("c-pre").checked = v === "pre" || v === "ambos"; $("c-dep").checked = v === "dep" || v === "ambos"; $("c-min").checked = $("c-minsel").value === "si";
+  mostrarLimites();
+}
+function menuDesdeLimites() {
+  const p = $("c-pre").checked, d = $("c-dep").checked;
+  $("c-lim").value = p && d ? "ambos" : p ? "pre" : d ? "dep" : "ninguno"; $("c-minsel").value = $("c-min").checked ? "si" : "no";
+  mostrarLimites();
 }
 /* ---------- la orden de compra, en una tabla ---------- */
 function tablaOrden(m, q) {
@@ -2909,7 +2941,9 @@ function dibujarFrecuencia() {
   h += `<tr class="tot"><td>Se puede ejecutar</td>${todas.map(c => `<td class="r${c.fija ? "" : " opt"}${c.v > 0 ? " mal" : ""}">${c.v > 0 ? "no" : "sí"}${c.v > 0 ? `<span class="s malo">por ${lista(c.motivo)}</span>` : ""}</td>`).join("")}<td></td></tr></tbody>`;
   $("mx1").innerHTML = h;
   { const masBarata = todas.reduce((a, c) => !a || c.dt.total < a.dt.total ? c : a, null), posible = [...fact, ...(opt ? [opt] : [])].reduce((a, c) => !a || c.dt.total < a.dt.total ? c : a, null);
-    $("mx1-t").innerHTML = !posible ? "<b>Ninguna forma de comprar cumple los límites.</b>"
+    const sinLim = cfg.presupuesto === null && cfg.deposito === null && cfg.minimo === null;
+    $("mx1-t").innerHTML = sinLim && posible ? `<b>Calculado sin restricciones: el mínimo es ${plata(posible.dt.total)} (${posible.fija ? "frecuencia " + posible.nom.toLowerCase() : "plan optimizado"}).</b> Todas las formas de comprar se pueden ejecutar.`
+      : !posible ? "<b>Ninguna forma de comprar cumple los límites.</b>"
       : `<b>Mínimo posible: ${plata(posible.dt.total)} (${posible.fija ? "frecuencia " + posible.nom.toLowerCase() : "plan optimizado"}).</b> ` +
         (masBarata.v > 0 ? `La columna más barata, ${masBarata.nom.toLowerCase()} con ${plata(masBarata.dt.total)}, no se puede ejecutar: ${lista(masBarata.mot)}. ` : "") +
         (pr.libre ? `Si no hubiera límites, el mínimo sería ${plata(pr.detalle(pr.libre).total)}: los límites cuestan ${plata(Math.max(0, posible.dt.total - pr.detalle(pr.libre).total))} por año.` : ""); }
@@ -3472,6 +3506,7 @@ $("form").addEventListener("input", ev => { if (esDatoCompras(ev.target)) marcar
 $("form").addEventListener("change", ev => { if (esDatoCompras(ev.target)) marcarCambios(); });
 $("g-auto").addEventListener("change", () => { if ($("g-auto").checked && cacheC && cambios) ejecutarTodo(); });
 $("g-calc").addEventListener("click", ejecutarTodo);
+$("c-lim").addEventListener("change", limitesDesdeMenu); $("c-minsel").addEventListener("change", limitesDesdeMenu);
 $("g-save").addEventListener("click", guardarDatos);
 $("g-ej").addEventListener("click", () => { cargarEjemplo(); cargarOfertasEjemplo(); refrescarCondOpts("mejor"); aplicarRefDefecto(true); marcarCambios(); });
 $("c-save").addEventListener("click", guardarDatos); $("f-save").addEventListener("click", guardarDatos);
