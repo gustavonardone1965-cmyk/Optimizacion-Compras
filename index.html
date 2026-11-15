@@ -3849,6 +3849,8 @@ const REF_INCLUIDAS = {
     { k: "inf_mens", nombre: "Inflación del último mes (INDEC)", unidad: "% mensual", valor: 2.2, fecha: "2026-10-31", fuente: "BCRA, variable 27", url: BCRA(27) },
     { k: "inf_ia", nombre: "Inflación interanual (INDEC)", unidad: "% anual", valor: 33.1, fecha: "2026-10-31", fuente: "BCRA, variable 28", url: BCRA(28) },
     { k: "rem_12m", nombre: "Inflación esperada próximos 12 meses (REM)", unidad: "% anual", valor: 21.8, fecha: "2026-10-31", fuente: "BCRA, variable 29", url: BCRA(29) },
+    { k: "rem_tc12", nombre: "Dólar esperado en 12 meses (REM, mediana)", unidad: "$ por dólar", valor: 1985, fecha: "2026-10-01", referencia: "$/USD; oct-27", fuente: "ArgentinaDatos, REM 2026-10 ($/USD; oct-27)", url: "https://api.argentinadatos.com/v1/finanzas/rem/ultimo" },
+    { k: "rem_tamar12", nombre: "TAMAR esperada en 12 meses (REM, mediana)", unidad: "% nominal anual", valor: 26.27, fecha: "2026-10-01", fuente: "ArgentinaDatos, REM 2026-10", url: "https://api.argentinadatos.com/v1/finanzas/rem/ultimo" },
     { k: "riesgo_pais", nombre: "Riesgo país (EMBI)", unidad: "puntos básicos", valor: 830, fecha: "2026-11-13", fuente: "ArgentinaDatos", url: "https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais/ultimo" }
   ],
   errores: []
@@ -3866,9 +3868,12 @@ function refsDe(campo) {
       L.push({ v: 100 * tea30(base), txt: `costo de endeudamiento: adelantos en cuenta corriente a empresas, ${numCampo(base)} % nominal anual (${Number.isFinite(adel.prom) ? `promedio de los últimos ${adel.nprom} datos` : "último dato"} al ${fechaCorta(adel.fecha)}), en efectivo anual`, url: adel.url }); }
     if (tam) L.push({ v: 100 * tea30(tam.valor), txt: `costo de oportunidad: TAMAR, ${numCampo(tam.valor)} % nominal anual al ${fechaCorta(tam.fecha)}, en efectivo anual (lo que rinde la plata colocada a plazo)`, url: tam.url });
   }
+  const tc12 = refSerie("rem_tc12"), tcm = refSerie("tc_may");
+  if (campo === "p-dev" && tc12 && tcm && tcm.valor > 0)
+    L.push({ v: 100 * (tc12.valor / tcm.valor - 1), txt: `dólar esperado por el REM del BCRA a 12 meses (${plata(tc12.valor)}${tc12.referencia ? ", " + escHtml(tc12.referencia) : ""}) contra el mayorista actual (${plata(tcm.valor, 2)} al ${fechaCorta(tcm.fecha)})`, url: tc12.url });
   if ((campo === "c-inf" || campo === "p-dev") && rem)
     L.push({ v: rem.valor, txt: campo === "c-inf" ? `inflación esperada para los próximos 12 meses, mediana del REM del BCRA (dato al ${fechaCorta(rem.fecha)})`
-      : `supuesto neutral: el dólar sube como la inflación esperada del REM (${numCampo(rem.valor)} %), es decir, tipo de cambio real constante`, url: rem.url });
+      : `${tc12 && tcm ? "otra referencia" : "supuesto neutral"}: el dólar sube como la inflación esperada del REM (${numCampo(rem.valor)} %), es decir, tipo de cambio real constante`, url: rem.url });
   return L;
 }
 const CAMPOS_REF = ["c-fin", "c-inf", "p-dev"];
@@ -3893,7 +3898,7 @@ function pintarTablaRef() {
   const S = refMercado.series || [];
   $("ref-estado").innerHTML = `Valores ${refOrigen === "base" ? `actualizados automáticamente el <b>${fechaTxt(refMercado.actualizado)}</b> desde las API públicas` : `incluidos al publicar la página (${fechaTxt(refMercado.actualizado)}): la actualización automática todavía no respondió`}. Son referencias: todos los campos se pueden cambiar con la realidad de la empresa.` +
     ((refMercado.errores || []).length ? ` <span class="malo">En la última actualización no respondió: ${escHtml(refMercado.errores.join(", "))}; se conservó el dato anterior.</span>` : "");
-  const val = s => s.k === "tc_may" ? plata(s.valor, 2) : s.k === "riesgo_pais" ? `${Math.round(s.valor).toLocaleString("es-AR")} pb` : `${s.valor.toLocaleString("es-AR", { maximumFractionDigits: 2 })} %`;
+  const val = s => s.k === "tc_may" || s.k === "rem_tc12" ? plata(s.valor, 2) : s.k === "riesgo_pais" ? `${Math.round(s.valor).toLocaleString("es-AR")} pb` : `${s.valor.toLocaleString("es-AR", { maximumFractionDigits: 2 })} %`;
   const extra = s => s.k === "adel_tna" ? `<span class="s">${Number.isFinite(s.prom) ? `promedio de los últimos ${s.nprom} datos: ${s.prom.toLocaleString("es-AR", { maximumFractionDigits: 2 })} % · ` : ""}efectivo anual ${pc2(tea30(Number.isFinite(s.prom) ? s.prom : s.valor))}</span>`
     : s.k === "tamar_tna" || s.k === "badlar_tna" || s.k === "pf30_tna" ? `<span class="s">efectivo anual ${pc2(tea30(s.valor))}</span>`
     : s.k === "riesgo_pais" ? `<span class="s">informativo: no entra en el cálculo</span>` : "";
@@ -3913,31 +3918,33 @@ function iniciarRef() {
   }).catch(() => { /* sin base: quedan las incluidas al publicar */ });
 }
 /* ---------- aviso de actualización de las API, en todas las solapas, y botón para forzarla ---------- */
-const TAREA_REF = "trig_01WQqecZuHPgicwmy3WQ84cA";      // tarea programada que consulta las API y guarda los valores
+const TAREA_REF = "trig_01WQqecZuHPgicwmy3WQ84cA";
+const URL_ARTEFACTO = "https://claude.ai/artifact/FgUhuoNaif9tzHfGBWaMke";      // tarea programada que consulta las API y guarda los valores
 let refDoc = null, esperando = null;
 function datoMasReciente() {
   const f = (refMercado.series || []).filter(s => /^(tamar|badlar|pf30|adel|tc_may)/.test(s.k)).map(s => s.fecha).sort();
   return f.length ? f[f.length - 1] : null;
 }
 function pintarAvisoApi(msg, tipo) {
-  const a = refMercado.actualizado, horas = (Date.now() - new Date(a).getTime()) / 36e5, ult = datoMasReciente(), base = refOrigen === "base";
+  const a = refMercado.actualizado, horas = (Date.now() - new Date(a).getTime()) / 36e5, ult = datoMasReciente(), base = refOrigen === "base" || refOrigen === "directo";
   const viejo = !base || horas > 96;
   const el = $("api-aviso");
   el.classList.toggle("atrasado", viejo);
   el.querySelector(".txt").innerHTML = `<b>Datos de mercado (API del BCRA y ArgentinaDatos):</b> ` +
-    (base ? `actualizados el <b>${fechaTxt(a)}</b>` : `<b>incluidos al publicar la página (${fechaTxt(a)})</b>; la actualización automática todavía no respondió`) +
-    (ult ? ` · dato más reciente del BCRA: ${fechaCorta(ult)}` : "") + ` · actualización automática: lunes a viernes, 19:13.` +
+    (base ? `actualizados el <b>${fechaTxt(a)}</b>${refOrigen === "directo" ? " directamente desde las API, en este navegador" : ""}` : !enClaude() ? `<b>incluidos al publicar la página (${fechaTxt(a)})</b>; consultando las API desde este navegador…` : `<b>incluidos al publicar la página (${fechaTxt(a)})</b>; la actualización automática todavía no respondió`) +
+    (ult ? ` · dato más reciente del BCRA: ${fechaCorta(ult)}` : "") + (enClaude() ? ` · actualización automática: lunes a viernes, 19:13.` : ` · se actualiza al abrir la página y con el botón.`) +
     (viejo && base ? ` <b>Hace más de 4 días que no se actualizan.</b>` : "") +
     ((refMercado.errores || []).length ? ` <b>Sin respuesta en la última consulta: ${escHtml(refMercado.errores.join(", "))}</b> (se conservó el dato anterior).` : "");
   const m = el.querySelector(".msg");
   m.textContent = msg || ""; m.className = "msg" + (tipo ? " " + tipo : "");
 }
 // recibe un documento de referencias; si el usuario usaba la referencia anterior en un campo, lo pasa a la nueva
-function recibirRef(d) {
+function recibirRef(d, origen) {
+  origen = origen || "base";
   if (!d || !Array.isArray(d.series) || !d.actualizado) return false;
-  if (refOrigen === "base" && refMercado.actualizado === d.actualizado) return false;
+  if (refOrigen !== "incluidas al publicar" && refMercado.actualizado === d.actualizado) return false;
   const viejas = {}; CAMPOS_REF.forEach(id => { const r = refsDe(id)[0]; viejas[id] = r ? Math.round(r.v * 10) / 10 : null; });
-  refMercado = d; refOrigen = "base";
+  refMercado = d; refOrigen = origen;
   if (!aplicarRefDefecto(false)) {
     let cambio = false;
     CAMPOS_REF.forEach(id => { const v0 = viejas[id], r = refsDe(id)[0]; if (v0 === null || !r) return;
@@ -3961,12 +3968,13 @@ function esperarRef(antes) {
   }, 30000);
 }
 async function forzarApi() {
+  if (!enClaude()) { actualizarDirecto(false); return; }
   const b = $("api-btn"), antes = refMercado.actualizado;
   b.disabled = true; pintarAvisoApi("Pidiendo la actualización de las API…");
   const manual = " También se puede forzar desde Claude: tareas programadas → «Referencias de mercado para Optimización de compras» → «Ejecutar ahora».";
   let mcp = null;
   try { mcp = window.claude && typeof window.claude.use === "function" ? await window.claude.use("mcp") : null; } catch (e) { mcp = null; }
-  if (!mcp) { await releerRef(); b.disabled = false; pintarAvisoApi("Esta vista de la página no puede pedir la actualización. Se releyeron los últimos datos guardados." + manual, "malo"); return; }
+  if (!mcp) { await releerRef(); b.disabled = false; pintarAvisoApi("Esta vista del artefacto no tiene permiso para pedir la actualización (puede pasar si no iniciaste sesión o si no aceptaste el permiso). Se releyeron los últimos datos guardados." + manual, "malo"); return; }
   try { await mcp.callTool("Claude Code Remote", "fire_trigger", { trigger_id: TAREA_REF }, { cache: false }); }
   catch (e) {
     const c = e && e.code;
@@ -3983,6 +3991,76 @@ async function forzarApi() {
   }
   pintarAvisoApi("Actualización pedida: se están consultando las API del BCRA y ArgentinaDatos. Los datos nuevos aparecen solos en unos minutos y, si estaban en uso, pasan a los campos.", "ok");
   esperarRef(antes);
+}
+/* ---------- actualización directa desde el navegador (cuando el HTML se usa fuera de Claude) ----------
+   Fuera de Claude la página consulta las API públicas por su cuenta: BCRA (Estadísticas Monetarias v4.0)
+   y ArgentinaDatos (riesgo país, REM, inflación). Lo que no responde conserva el dato anterior. */
+const AD = p => "https://api.argentinadatos.com/v1/" + p;
+const enClaude = () => !!(window.claude && typeof window.claude.use === "function");
+async function traerJSON(url) {
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 15000);
+  try { const r = await fetch(url, { signal: ctl.signal, headers: { Accept: "application/json" } }); if (!r.ok) throw new Error("HTTP " + r.status); return await r.json(); }
+  finally { clearTimeout(t); }
+}
+const isoDia = d => d.toISOString().slice(0, 10);
+async function serieBCRA(id, dias) {
+  const hoy = new Date(), desde = new Date(hoy.getTime() - dias * 864e5);
+  const j = await traerJSON(`${BCRA(id)}?desde=${isoDia(desde)}&hasta=${isoDia(hoy)}`);
+  const det = (((j || {}).results || [])[0] || {}).detalle || [];
+  const ok = det.filter(x => x && typeof x.valor === "number" && x.fecha).sort((a, b) => a.fecha < b.fecha ? 1 : -1);
+  if (!ok.length) throw new Error("sin datos");
+  return ok;
+}
+async function actualizarDirecto(silencioso) {
+  const b = $("api-btn"); b.disabled = true;
+  if (!silencioso) pintarAvisoApi("Consultando las API del BCRA y ArgentinaDatos desde este navegador…");
+  const base = JSON.parse(JSON.stringify(refMercado)), S = {}; (base.series || []).forEach(x => { S[x.k] = x; });
+  const errores = [], bien = []; let okBCRA = 0;
+  const poner = (k, nombre, unidad, valor, fecha, fuente, url, extra) => { S[k] = { k, nombre, unidad, valor, fecha, fuente, url, ...(extra || {}) }; bien.push(k); };
+  const rangos = { tasa: v => v >= 0 && v <= 300, tc: v => v >= 100 && v <= 100000, im: v => v >= -5 && v <= 50, ia: v => v >= -10 && v <= 1000, rp: v => v >= 0 && v <= 10000 };
+  const bcra = [[44, "tamar_tna", "TAMAR, bancos privados", "% nominal anual", "tasa", 45], [45, "tamar_tea", "TAMAR, bancos privados", "% efectivo anual", "tasa", 45],
+    [7, "badlar_tna", "BADLAR, bancos privados", "% nominal anual", "tasa", 45], [35, "badlar_tea", "BADLAR, bancos privados", "% efectivo anual", "tasa", 45],
+    [12, "pf30_tna", "Plazo fijo a 30 días, promedio del sistema", "% nominal anual", "tasa", 45], [145, "adel_tna", "Adelantos en cuenta corriente a empresas", "% nominal anual", "tasa", 45],
+    [5, "tc_may", "Dólar mayorista de referencia (Com. A 3500)", "$ por dólar", "tc", 45], [27, "inf_mens", "Inflación del último mes (INDEC)", "% mensual", "im", 120],
+    [28, "inf_ia", "Inflación interanual (INDEC)", "% anual", "ia", 120], [29, "rem_12m", "Inflación esperada próximos 12 meses (REM)", "% anual", "ia", 120]];
+  await Promise.all(bcra.map(async ([id, k, nombre, unidad, rg, dias]) => {
+    try {
+      const d = await serieBCRA(id, dias), v = d[0].valor; if (!rangos[rg](v)) throw new Error("fuera de rango");
+      const extra = k === "adel_tna" ? { prom: Math.round(d.slice(0, 5).reduce((a, x) => a + x.valor, 0) / Math.min(5, d.length) * 100) / 100, nprom: Math.min(5, d.length) } : null;
+      poner(k, nombre, unidad, v, d[0].fecha, `BCRA, variable ${id}`, BCRA(id), extra); okBCRA++;
+    } catch (e) { errores.push(k); try { console.warn("BCRA", id, e && e.message); } catch (_) { /* sin consola */ } }
+  }));
+  // ArgentinaDatos: riesgo país, REM (inflación, dólar y TAMAR esperados) y, si el BCRA no respondió, inflación
+  try { const j = await traerJSON(AD("finanzas/indices/riesgo-pais/ultimo")); if (!rangos.rp(j.valor)) throw 0; poner("riesgo_pais", "Riesgo país (EMBI)", "puntos básicos", j.valor, j.fecha, "ArgentinaDatos", AD("finanzas/indices/riesgo-pais/ultimo")); } catch (e) { errores.push("riesgo_pais"); }
+  try {
+    const rem = await traerJSON(AD("finanzas/rem/ultimo")), L = (Array.isArray(rem) ? rem : []).filter(x => x.periodoTipo === "proximos_12_meses" && x.muestra === "todos" && typeof x.mediana === "number");
+    const busca = re => L.find(x => re.test(String(x.indicador || "")));
+    const tc = busca(/tipo de cambio/i), ta = busca(/tamar/i), ipc = busca(/nivel general/i);
+    if (tc && rangos.tc(tc.mediana)) poner("rem_tc12", "Dólar esperado en 12 meses (REM, mediana)", "$ por dólar", tc.mediana, tc.fecha, `ArgentinaDatos, REM ${tc.informe} (${tc.referencia})`, AD("finanzas/rem/ultimo"), { referencia: tc.referencia });
+    if (ta && rangos.tasa(ta.mediana)) poner("rem_tamar12", "TAMAR esperada en 12 meses (REM, mediana)", "% nominal anual", ta.mediana, ta.fecha, `ArgentinaDatos, REM ${ta.informe}`, AD("finanzas/rem/ultimo"));
+    if (errores.includes("rem_12m") && ipc && rangos.ia(ipc.mediana)) { poner("rem_12m", "Inflación esperada próximos 12 meses (REM)", "% anual", ipc.mediana, ipc.fecha, `ArgentinaDatos, REM ${ipc.informe}`, AD("finanzas/rem/ultimo")); errores.splice(errores.indexOf("rem_12m"), 1); }
+    if (!tc) errores.push("rem_tc12");
+  } catch (e) { errores.push("rem_tc12"); }
+  for (const [k, ruta, nombre, unidad, rg] of [["inf_mens", "finanzas/indices/inflacion", "Inflación del último mes (INDEC)", "% mensual", "im"], ["inf_ia", "finanzas/indices/inflacionInteranual", "Inflación interanual (INDEC)", "% anual", "ia"]]) {
+    if (!errores.includes(k)) continue;
+    try { const a = await traerJSON(AD(ruta)), u = a[a.length - 1]; if (!u || !rangos[rg](u.valor)) throw 0; poner(k, nombre, unidad, u.valor, u.fecha, "ArgentinaDatos (INDEC)", AD(ruta)); errores.splice(errores.indexOf(k), 1); } catch (e) { /* queda el anterior */ }
+  }
+  const ORDEN = ["tamar_tna", "tamar_tea", "badlar_tna", "badlar_tea", "pf30_tna", "adel_tna", "tc_may", "inf_mens", "inf_ia", "rem_12m", "rem_tc12", "rem_tamar12", "riesgo_pais"];
+  const NOMBRE_ERR = { tamar_tna: "TAMAR", tamar_tea: "TAMAR efectiva", badlar_tna: "BADLAR", badlar_tea: "BADLAR efectiva", pf30_tna: "plazo fijo", adel_tna: "adelantos a empresas", tc_may: "dólar mayorista", inf_mens: "inflación mensual", inf_ia: "inflación interanual", rem_12m: "REM inflación", rem_tc12: "REM dólar", riesgo_pais: "riesgo país" };
+  b.disabled = false;
+  const sinBCRA = okBCRA === 0;
+  const notaBCRA = sinBCRA ? " La API del BCRA no respondió a este navegador (puede no permitir consultas directas desde páginas web): esas tasas quedan con su último valor; se pueden cargar a mano o actualizar desde el artefacto en Claude." : "";
+  if (!bien.length) { pintarAvisoApi("No respondió ninguna API desde este navegador (sin conexión o bloqueado por la red). Se siguen usando los datos anteriores.", "malo"); return false; }
+  const d = { actualizado: new Date().toISOString(), errores: [...new Set(errores)].map(k => NOMBRE_ERR[k] || k), series: ORDEN.filter(k => S[k]).map(k => S[k]) };
+  try { localStorage.setItem("ref-mercado", JSON.stringify(d)); } catch (e) { /* sin almacenamiento local */ }
+  recibirRef(d, "directo");
+  pintarAvisoApi(d.errores.length ? `Actualizado. Sin respuesta: ${d.errores.join(", ")} (se conservó el dato anterior).` + notaBCRA : "Actualizado recién desde las API.", d.errores.length ? "malo" : "ok");
+  return true;
+}
+function iniciarDirecto() {
+  if (enClaude()) return;
+  try { const d = JSON.parse(localStorage.getItem("ref-mercado")); if (d && d.actualizado && new Date(d.actualizado) > new Date(refMercado.actualizado)) recibirRef(d, "directo"); } catch (e) { /* nada guardado */ }
+  actualizarDirecto(true);
 }
 $("api-btn").addEventListener("click", forzarApi);
 document.addEventListener("click", ev => {
@@ -4082,6 +4160,7 @@ fijarSolapa(modoDeHash(), true);
 aplicarRefDefecto(false);
 iniciarGuardado();
 iniciarRef();
+iniciarDirecto();
 </script>
 </body>
 </html>
